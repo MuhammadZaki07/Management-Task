@@ -23,7 +23,7 @@ Management Task School adalah aplikasi manajemen tugas sekolah yang dibangun men
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/username/management-task-school.git
+git clone https://github.com/MuhammadZaki07/Management-Task.git
 ```
 
 ### 2. Install Backend (Laravel)
