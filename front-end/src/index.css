@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap");
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "tailwindcss";
+
+
+* {
+    font-family: "Poppins", serif;
+    font-style: normal;
+}
+
+.font-mariware {
+    font-family: "Merriweather", serif;
+    font-style: normal;
+}
+
+.font-gummy{
+    font-family: "Sour Gummy", serif;
+    font-optical-sizing: auto;
+    font-weight: <weight>;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+.text-salt{
+    color: #ffb677;
+}
+
+.text-worn{
+    color:#f7b797;
+}
+
+.bg-worn{
+    background-color:#f7b797;
+}
+
+
+
+@layer utilities {
+    .animate-pulse-fast {
+      animation: pulse 0.7s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .animate-pulse-superfast {
+      animation: pulse 0.3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  }
