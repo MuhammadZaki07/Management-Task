@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMidleware
+class TeacherMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,9 +16,10 @@ class AdminMidleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::check() && Auth::user()->role === 'admin'){
+        if(Auth::check() && Auth::user()->role === "teacher"){
             return $next($request);
         }
+
         return response()->json([
             'status' => 'insufficient_permissions',
             'message' => 'Access forbidden'

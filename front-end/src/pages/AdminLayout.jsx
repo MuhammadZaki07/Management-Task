@@ -41,11 +41,6 @@ const AdminLayout = () => {
             label="Departement"
           />
           <LinkSidebar
-            link="profile"
-            logo="bi bi-person-square"
-            label="Profile"
-          />
-          <LinkSidebar
             link="logout"
             logo="bi bi-box-arrow-left"
             label="Log-out"

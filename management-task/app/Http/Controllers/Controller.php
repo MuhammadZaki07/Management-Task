@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 abstract class Controller
 {
-    public function response($status,$message,$data = [], $error = []){
+    public function response($code,$status,$message,$data = [], $error = []){
         $response = [
             "status" => $status,
             "message" => $message
@@ -18,6 +18,6 @@ abstract class Controller
             $response['errors'] = $error;
         }
 
-        return response()->json($response,$status);
+        return response()->json($response,$code);
     }
 }

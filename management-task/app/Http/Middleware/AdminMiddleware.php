@@ -4,10 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMidleware
+class AdminMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,12 +15,6 @@ class AdminMidleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(Auth::check() && Auth::user()->role === 'admin'){
-            return $next($request);
-        }
-        return response()->json([
-            'status' => 'insufficient_permissions',
-            'message' => 'Access forbidden'
-        ], 403);
+        return $next($request);
     }
 }
