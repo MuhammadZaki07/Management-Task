@@ -19,6 +19,7 @@ import Lesson from "./pages/Admin/lesson/Lesson";
 import Schedule from "./pages/Admin/schedule/Schedule";
 import Profile from "./components/Profile";
 import Departement from "./pages/Admin/Departement/Departement";
+import Detailtask from "./pages/Admin/Task/Detailtask";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
         path:"/departement",
         element:<Departement/>
       },
+      {
+        path:"/detail-task",
+        element:<Detailtask/>
+      }
     ],
   },
   {

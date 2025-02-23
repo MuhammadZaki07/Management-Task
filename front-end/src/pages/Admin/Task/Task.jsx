@@ -73,7 +73,7 @@ const Task = () => {
 
       <div className="grid grid-cols-4 gap-5 w-full py-10">
         {tasks.map((task) => (
-          <Link key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+          <Link to={`/detail-task`} key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
             <h1 className="font-semibold text-2xl text-slate-800">
               {task.name}
             </h1>
@@ -85,7 +85,7 @@ const Task = () => {
             </p>
             <div className="flex gap-5 items-center py-3 mb-3">
               <div className="w-3 h-3 rounded-full bg-red-600 animate-ping"></div>
-              <p className="text-slate-500 text-xs font-normal">Deadline : 05-09-2021 - 07-09-2021</p>
+              <p className="text-slate-500 text-xs font-normal">Deadline : {task.deadline}</p>
             </div>
             <div className="flex gap-5">
               <div className="flex gap-3 text-slate-500 text-sm">
