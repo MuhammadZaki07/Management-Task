@@ -13,9 +13,9 @@ const CardAdmin = () => {
             count={224}
             logo={`bi bi-person-workspace`}
           />
-          <CardDashboard title={`Parents`} count={840} logo={`bi bi-people`} />
+          <CardDashboard title={`Lessons`} count={840} logo={`bi bi-people`} />
           <CardDashboard
-            title={`Earnings`}
+            title={`Class`}
             count={150}
             logo={`bi bi-currency-exchange`}
           />

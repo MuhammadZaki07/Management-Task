@@ -2,9 +2,54 @@ import { useState } from "react";
 import Modal from "../../../components/Modal";
 import Create from "../Task/Create";
 import Edit from "../Task/Edit";
+import { Link } from "react-router-dom";
 
 const Task = () => {
   const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
+
+  const tasks = [
+    {
+      id: 1,
+      name: "Project Website",
+      class: "11-RPL-A",
+      date: "10-02-2025",
+      lesson: "Web Development",
+      teacher: "Mr. Smith",
+      documents: 3,
+      deadline: "12-02-2025 - 15-02-2025",
+    },
+    {
+      id: 2,
+      name: "Network Setup",
+      class: "10-TKJ-B",
+      date: "12-02-2025",
+      lesson: "Networking",
+      teacher: "Ms. Johnson",
+      documents: 2,
+      deadline: "14-02-2025 - 17-02-2025",
+    },
+    {
+      id: 3,
+      name: "3D Animation",
+      class: "12-Animasi-C",
+      date: "15-02-2025",
+      lesson: "Animation",
+      teacher: "Mr. Anderson",
+      documents: 4,
+      deadline: "17-02-2025 - 20-02-2025",
+    },
+    {
+      id: 4,
+      name: "Car Engine Analysis",
+      class: "11-Otomotif-A",
+      date: "18-02-2025",
+      lesson: "Mechanical Engineering",
+      teacher: "Mr. Brown",
+      documents: 1,
+      deadline: "20-02-2025 - 23-02-2025",
+    },
+  ];
+  
 
   return (
     <div className="px-16">
@@ -26,54 +71,31 @@ const Task = () => {
         </div>
       </div>
 
-      <table className="w-full table-auto">
-        <thead>
-          <tr>
-            <td className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-slate-500">
-              No
-            </td>
-            <td className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-slate-500">
-              Document Name
-            </td>
-            <td className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-slate-500">
-              Size
-            </td>
-            <td className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-slate-500">
-              Date
-            </td>
-            <td className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-orange-500"></td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="odd:bg-slate-100">
-            <td className="font-medium text-sm text-[#464444] py-3 border-b border-slate-500">
-              1
-            </td>
-            <td className="font-medium text-sm text-[#464444] py-3 border-b border-slate-500">
-              <p className="font-semibold text-slate-500">Tugas Laravel 11</p>
-              <p className="font-light text-sm">Dikirim ke : RPL-A</p>
-            </td>
-            <td className="font-medium text-sm text-[#464444] py-3 border-b border-slate-500">
-              134.4 kb
-            </td>
-            <td className="font-medium text-sm text-[#464444] py-3 border-b border-slate-500">
-              05-08-2025
-            </td>
-            <td className="font-medium text-sm text-[#464444] py-3 border-b border-slate-500">
-              <div className="flex gap-5">
-                <button
-                  onClick={() => setModalState({ isOpen: true, mode: "edit" })}
-                >
-                  <i className="bi bi-pencil-fill text-3xl cursor-pointer"></i>
-                </button>
-                <button>
-                  <i className="bi bi-trash3-fill text-3xl cursor-pointer"></i>
-                </button>
+      <div className="grid grid-cols-4 gap-5 w-full py-10">
+        {tasks.map((task) => (
+          <Link key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+            <h1 className="font-semibold text-2xl text-slate-800">
+              {task.name}
+            </h1>
+            <p className="text-slate-500 text-xs font-normal mt-2">
+              {task.class} | {task.date}
+            </p>
+            <p className="text-slate-500 text-sm font-normal mt-2">
+              Lesson: {task.lesson} | {task.teacher}
+            </p>
+            <div className="flex gap-5 items-center py-3 mb-3">
+              <div className="w-3 h-3 rounded-full bg-red-600 animate-ping"></div>
+              <p className="text-slate-500 text-xs font-normal">Deadline : 05-09-2021 - 07-09-2021</p>
+            </div>
+            <div className="flex gap-5">
+              <div className="flex gap-3 text-slate-500 text-sm">
+                <i className="bi bi-file-earmark-text-fill"></i>
+                <p>{task.documents < 1 ? "tidak ada document" : task.documents + " Document"}{task.documents > 1 ? "s" : ""}</p>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </Link>
+        ))}
+      </div>
 
       {modalState.isOpen && (
         <Modal
