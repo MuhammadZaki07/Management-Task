@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Modal from "../../../components/Modal";
-import Create from "../Task/Create";
-import Edit from "../Task/Edit";
 import { Link } from "react-router-dom";
+import Create from "../../Admin/Teacher/Create";
+import Edit from "../../Admin/Teacher/Edit";
 
 const Task = () => {
   const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
@@ -73,7 +73,7 @@ const Task = () => {
 
       <div className="grid grid-cols-4 gap-5 w-full py-10">
         {tasks.map((task) => (
-          <Link to={`/detail-task`} key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+          <Link to={`/teacher-layout/detail-task`} key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
             <h1 className="font-semibold text-2xl text-slate-800">
               {task.name}
             </h1>

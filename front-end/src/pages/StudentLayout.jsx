@@ -14,29 +14,32 @@ const StudentLayout = () => {
       </div>
       <div className="px-3 py-5 flex flex-col gap-5">
         <LinkSidebar
-          link="dashboard"
+          link="student-layout/dashboard"
           logo="bi bi-columns-gap"
           label="Dashboard"
         />
         <LinkSidebar
-          link="data-ptk"
+          link="student-layout/data-ptk"
           logo="bi bi-people-fill"
           label="Data PTK"
         />
         <LinkSidebar
-          link="timetable"
+          link="student-layout/timetable"
           logo="bi bi-table"
           label="Lesson timetable"
         />
         <LinkSidebar
-          link="assessment"
+          link="student-layout/assessment"
           logo="bi bi-journal-text"
           label="assessment"
         />
         <LinkSidebar
-          link="shared-storage"
+          link="student-layout/task"
           logo="bi bi-memory"
-          label="Shared storage"
+          label="Task"
+          showBadge={true}
+          left={`left-26`}
+          top={`top-2`}
         />
         <LinkSidebar
           link="logout"

@@ -1,7 +1,8 @@
+import LinkSidebar from "../components/Admin/LinkSidebar";
 import { Outlet } from "react-router-dom";
-import LinkSidebar from "./../components/Admin/LinkSidebar";
 import Navbar from "../components/Admin/Navbar";
-const AdminLayout = () => {
+
+const TeacherLayout = () => {
   return (
     <div className="w-full h-screen flex bg-slate-50">
       <div className="w-72 bg-[#f5f2f0] h-full relative z-50">
@@ -13,36 +14,28 @@ const AdminLayout = () => {
         </div>
         <div className="px-3 py-5 flex flex-col gap-5">
           <LinkSidebar
-            link="admin-layout/dashboard"
+            link="teacher-layout/dashboard"
             logo="bi bi-columns-gap"
             label="Dashboard"
           />
+          <LinkSidebar link="teacher-layout/task" logo="bi bi-list-task" label="Task" />
           <LinkSidebar
-            link="admin-layout/teachers"
-            logo="bi bi-person-workspace"
-            label="Teachers"
-          />
-          <LinkSidebar
-            link="admin-layout/students"
-            logo="bi bi-person-lines-fill"
-            label="Students"
-          />
-          <LinkSidebar link="admin-layout/class" logo="bi bi-buildings" label="Class" />
-          <LinkSidebar link="admin-layout/lesson" logo="bi bi-journals" label="Lesson" />
-          <LinkSidebar
-            link="admin-layout/schedule"
+            link="teacher-layout/schedule"
             logo="bi bi-layout-text-sidebar-reverse"
             label="Schedule"
           />
           <LinkSidebar
-            link="admin-layout/departement"
-            logo="bi bi-building"
-            label="Departement"
-          />
-          <LinkSidebar
-            link="admin-layout/announcement"
+            link="teacher-layout/announcement"
             logo="bi bi-envelope-fill"
             label="announcement"
+          />
+          <LinkSidebar
+            link="teacher-layout/notification"
+            logo="bi bi-bell-fill"
+            label="Notification"
+            showBadge={true}
+            left={`left-8`}
+            top={`top-2`}
           />
           <LinkSidebar
             link="logout"
@@ -62,4 +55,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default TeacherLayout;
