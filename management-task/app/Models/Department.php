@@ -12,4 +12,14 @@ class Department extends Model
     {
         return $this->belongsToMany(Lesson::class, 'department_lesson');
     }
+
+    public function classes()
+    {
+        return $this->hasMany(Classes::class);
+    }
+
+    public function teachers()
+    {
+        return $this->hasMany(Teacher::class);
+    }
 }

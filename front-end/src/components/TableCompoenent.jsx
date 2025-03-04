@@ -88,7 +88,7 @@ const TableComponent = ({
       return;
     }
 
-    const loadingAlert = Swal.fire({
+    Swal.fire({
       title: "Menghapus data...",
       text: "Proses ini memerlukan waktu beberapa detik.",
       icon: "info",

@@ -15,14 +15,20 @@ class AnnouncementController extends Controller
     {
         $user = Auth::user();
 
-        $announcements = Announcement::whereJsonContains('sent_to', $user->role)
-            ->orWhereJsonContains('sent_to', $user->id)
-            ->where('read_status', false)
+        $announcements = Announcement::where(function ($query) use ($user) {
+            $query->whereJsonContains('sent_to', $user->role)
+                ->orWhereJsonContains('sent_to', $user->id)
+                ->orWhere('sent_by', $user->id);
+        })
             ->get();
 
-        return response()->json($announcements);
+        return response()->json([
+            'unread' => $announcements->where('read_status', false)->where('sent_by', '!=', $user->id)->values(),
+            'read' => $announcements->where('read_status', true)->values()->merge(
+                $announcements->where('sent_by', $user->id)->values()
+            ),
+        ]);
     }
-
 
     public function show($id)
     {
@@ -35,7 +41,6 @@ class AnnouncementController extends Controller
 
         return response()->json($announcement);
     }
-
 
     public function store(Request $request)
     {
@@ -80,14 +85,11 @@ class AnnouncementController extends Controller
         return response()->json($announcement, 201);
     }
 
-
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'sent_to' => 'required|array',
-            'sent_to.*' => 'array',
         ]);
 
         if ($validator->fails()) {
@@ -102,20 +104,19 @@ class AnnouncementController extends Controller
 
         $announcement->title = $request->title;
         $announcement->message = $request->message;
-        $announcement->sent_to = $request->sent_to;
         $announcement->sent_by = Auth::id();
         $announcement->save();
 
-        foreach ($request->sent_to as $group => $userIds) {
-            foreach ($userIds as $userId) {
-                NotificationHelper::send($userId, 'announcement', "Pengumuman diperbarui: {$request->title}");
+        if ($request->has('sent_to') && is_array($request->sent_to)) {
+            foreach ($request->sent_to as $group => $userIds) {
+                foreach ($userIds as $userId) {
+                    NotificationHelper::send($userId, 'announcement', "Pengumuman diperbarui: {$request->title}");
+                }
             }
         }
 
         return response()->json($announcement, 200);
     }
-
-
 
     public function destroy($id)
     {

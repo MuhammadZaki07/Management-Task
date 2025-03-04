@@ -68,22 +68,33 @@ class DepartementController extends Controller
         ], 200);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $department = Department::find($id);
-        if (!$department) {
-            return response()->json(['status' => 'error', 'message' => 'Department not found'], 404);
-        }
+        $ids = is_array($request->id) ? $request->id : [$request->id];
 
-        if ($department->classes()->exists() || $department->teachers()->exists() || $department->lessons()->exists()) {
+        $departments = Department::whereIn('id', $ids)->get();
+
+        if ($departments->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cannot delete department because it still has related data'
-            ], 400);
+                'message' => 'Department not found'
+            ], 404);
         }
 
-        $department->delete();
+        foreach ($departments as $department) {
+            if ($department->classes()->exists() || $department->teachers()->exists() || $department->lessons()->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot delete one or more departments because they still have related data'
+                ], 400);
+            }
+        }
 
-        return response()->json(['status' => 'success', 'message' => 'Department deleted successfully']);
+        Department::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Department(s) deleted successfully'
+        ]);
     }
 }
