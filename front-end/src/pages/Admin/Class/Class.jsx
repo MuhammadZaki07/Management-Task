@@ -1,106 +1,112 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import Modal from "../../../components/Modal";
 import Create from "../Class/Create";
 import Edit from "../Class/Edit";
-
-const dummyClasses = [
-  { id: 1, name: "10-RPL-A", major: "RPL" },
-  { id: 2, name: "10-RPL-B", major: "RPL" },
-  { id: 3, name: "11-RPL-A", major: "RPL" },
-  { id: 4, name: "10-TKJ-A", major: "TKJ" },
-  { id: 5, name: "11-TKJ-B", major: "TKJ" },
-  { id: 6, name: "12-Animasi-A", major: "Animasi" },
-  { id: 7, name: "10-Otomotif-A", major: "Otomotif" },
-];
+import TableComponent from "../../../components/TableCompoenent";
+import Swal from "sweetalert2";
 
 const Class = () => {
+  const [classes, setClasses] = useState([]);
   const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
+  const token = localStorage.getItem("token");
 
-  const filteredClasses = dummyClasses.filter((cls) => {
-    return (
-      (filter === "All" || cls.major === filter) &&
-      cls.name.toLowerCase().includes(search.toLowerCase())
-    );
-  });
+  const fetchClasses = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/classes",{
+        headers : {
+          Authorization:`Bearer ${token}`
+        }
+      });
+      setClasses(response.data.data);
+    } catch (error) {
+      console.error("Gagal mengambil data kelas:", error);
+    }
+  };
 
+  useEffect(() => {
+    fetchClasses();
+  }, [classes]);
+
+  const handleEdit = (classData) => {
+    setModalState({ isOpen: true, mode: "edit",classData });
+  };
+
+  const handleDeleteClasses = (ids) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Once deleted, these classes cannot be recovered!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, keep it",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios
+          .delete("/api/classes/destroy", {
+            data: { ids: ids },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then(() => {
+            setClasses((prevClasses) =>
+              prevClasses.filter((classroom) => !ids.includes(classroom.id))
+            );
+            Swal.fire("Deleted!", "The classes have been deleted.", "success");
+          })
+          .catch((error) => {
+            console.error("Error deleting classes:", error);
+            Swal.fire("Error", "Failed to delete classes.", "error");
+          });
+      }
+    });
+  };
+
+  const handleSuccess = () => {
+    setModalState({ isOpen: false });
+  };
+
+  const handleCreate = () => {
+    setModalState({ isOpen: true, mode: "create" });
+  };
+
+  const columns = [
+    {
+      header: "Class Name",
+      accessorKey: "class_name",
+    },
+    {
+      header: "Department",
+      accessorKey: "department.department_name",
+    },
+    {
+      header: "Home Room Teacher",
+      accessorKey: "homeroom_teacher.user.name",
+    },
+    {
+      header: "Grade Level",
+      accessorKey: "grade_level",
+    },
+  ];
   return (
-    <div className="px-16">
-      <div className="flex justify-between items-center py-10">
-        <div className="flex flex-col gap-3">
-          <h1 className="font-bold text-4xl text-worn">Classes</h1>
-          <p className="font-normal text-slate-500">Manage Class SMKK</p>
-        </div>
-        <div>
-          <button
-            onClick={() => setModalState({ isOpen: true, mode: "create" })}
-            className="bg-worn hover:bg-slate-400 cursor-pointer text-white font-semibold rounded-lg py-3 px-5"
-          >
-            Create
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-4 mb-10 justify-end">
-        <input
-          type="text"
-          placeholder="Search class..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 rounded-lg w-1/5 bg-white border-slate-300/[0.5] focus:outline-none px-4 font-normal"
-        />
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border p-2 rounded-lg w-1/9 bg-white border-slate-300/[0.5] focus:outline-none px-4 font-normald"
-        >
-          <option value="All">All Majors</option>
-          <option value="RPL">RPL</option>
-          <option value="TKJ">TKJ</option>
-          <option value="Animasi">Animasi</option>
-          <option value="Otomotif">Otomotif</option>
-        </select>
-      </div>
-
-      <table className="w-full table-auto">
-        <thead>
-          <tr className="font-semibold text-lg text-[#fc691f] py-2.5 border-b border-slate-500">
-            <td className="py-2.5">No</td>
-            <td className="py-2.5">Class Name</td>
-            <td className="py-2.5">Major</td>
-            <td className="py-2.5">Action</td>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredClasses.length > 0 ? (
-            filteredClasses.map((cls, index) => (
-              <tr key={cls.id} className="odd:bg-slate-100 font-medium text-sm text-[#464444] border-b border-slate-500">
-                <td className="py-3">{index + 1}</td>
-                <td className="py-3">{cls.name}</td>
-                <td className="py-3">{cls.major}</td>
-                <td className="py-3 flex gap-5">
-                  <button onClick={() => setModalState({ isOpen: true, mode: "edit" })}>
-                    <i className="bi bi-pencil-fill text-xl cursor-pointer"></i>
-                  </button>
-                  <i className="bi bi-trash3-fill text-xl"></i>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" className="text-center py-4 text-gray-500">No data</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <>
+      <TableComponent
+        data={classes}
+        columns={columns}
+        title="Classes"
+        description="Manage all your classes here"
+        onEdit={handleEdit}
+        onDelete={handleDeleteClasses}
+        onCreate={handleCreate}
+      />
 
       {modalState.isOpen && (
         <Modal isOpen={modalState.isOpen} setOpen={setModalState} mode={modalState.mode}>
-          {modalState.mode === "create" ? <Create /> : <Edit />}
+          {modalState.mode === "create" ? <Create onSuccess={handleSuccess}/> : <Edit onSuccess={handleSuccess} classes={modalState.classData}/>}
         </Modal>
       )}
-    </div>
+    </>
   );
 };
 

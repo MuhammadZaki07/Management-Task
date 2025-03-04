@@ -3,63 +3,115 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lesson;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class LessonController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Get all lessons.
      */
     public function index()
     {
-        //
+        $lessons = Lesson::all();
+        return response()->json([
+            'status' => 'success',
+            'data' => $lessons
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Store a new lesson.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|unique:lessons,name',
+            'curiculumn' => 'required|string',
+        ]);
+
+        $lesson = Lesson::create([
+            'name' => $request->name,
+            'curiculumn' => $request->curiculumn,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata pelajaran berhasil ditambahkan',
+            'data' => $lesson,
+        ]);
     }
 
     /**
-     * Display the specified resource.
+     * Show a specific lesson.
      */
-    public function show(Lesson $lesson)
+    public function show($id)
     {
-        //
+        $lesson = Lesson::find($id);
+        if (!$lesson) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Lesson not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $lesson
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Lesson $lesson)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * Update an existing lesson.
      */
     public function update(Request $request, Lesson $lesson)
     {
-        //
+        $request->validate([
+            'name' => 'sometimes|required|string|unique:lessons,name,' . $lesson->id,
+            'curiculumn' => 'sometimes|required|string',
+        ]);
+
+        $lesson->update([
+            'name' => $request->name,
+            'curiculumn' => $request->curiculumn,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata pelajaran berhasil diperbarui',
+            'data' => $lesson,
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete a lesson.
      */
-    public function destroy(Lesson $lesson)
+    public function destroy(Request $request)
     {
-        //
+        $ids = $request->ids;
+
+        if (is_array($ids)) {
+            $lessons = Lesson::whereIn('id', $ids)->get();
+        } else {
+            $lessons = Lesson::where('id', $ids)->get();
+        }
+
+        foreach ($lessons as $lesson) {
+            if ($lesson->tasks()->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Some lessons still have related tasks!'
+                ], 403);
+            }
+        }
+
+        foreach ($lessons as $lesson) {
+            $lesson->delete();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lessons successfully deleted'
+        ]);
     }
 }

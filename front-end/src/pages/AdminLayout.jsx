@@ -1,7 +1,22 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import LinkSidebar from "./../components/Admin/LinkSidebar";
 import Navbar from "../components/Admin/Navbar";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 const AdminLayout = () => {
+  const { user, token } = useContext(AuthContext);
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user === null) {
+    return <div className="hidden">Loading...</div>;
+  }
+
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="w-full h-screen flex bg-slate-50">
       <div className="w-72 bg-[#f5f2f0] h-full relative z-50">
@@ -27,12 +42,15 @@ const AdminLayout = () => {
             logo="bi bi-person-lines-fill"
             label="Students"
           />
-          <LinkSidebar link="admin-layout/class" logo="bi bi-buildings" label="Class" />
-          <LinkSidebar link="admin-layout/lesson" logo="bi bi-journals" label="Lesson" />
           <LinkSidebar
-            link="admin-layout/schedule"
-            logo="bi bi-layout-text-sidebar-reverse"
-            label="Schedule"
+            link="admin-layout/class"
+            logo="bi bi-buildings"
+            label="Class"
+          />
+          <LinkSidebar
+            link="admin-layout/lesson"
+            logo="bi bi-journals"
+            label="Lesson"
           />
           <LinkSidebar
             link="admin-layout/departement"
@@ -45,9 +63,9 @@ const AdminLayout = () => {
             label="announcement"
           />
           <LinkSidebar
-            link="logout"
-            logo="bi bi-box-arrow-left"
-            label="Log-out"
+            link="admin-layout/profile"
+            logo="bi bi-person-circle"
+            label="Profile"
           />
         </div>
       </div>

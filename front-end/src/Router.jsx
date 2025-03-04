@@ -8,14 +8,12 @@ import StudentLayout from "./pages/StudentLayout";
 import Dashboard from "./pages/Admin/Dashboard";
 import DashboardStudent from "./pages/Student/Dashboard";
 import DataPtk from "./pages/Student/DataPtk";
-import ScheduleTable from "./pages/Admin/schedule/Schedule";
 import Assesment from "./pages/Student/Assessment";
 import TaskStudent from "./pages/Student/TaskStudent";
 import Teachers from "./pages/Admin/Teacher/Teachers";
 import Student from "./pages/Admin/Student/Student";
 import Class from "./pages/Admin/Class/Class";
 import Lesson from "./pages/Admin/lesson/Lesson";
-import Schedule from "./pages/Admin/schedule/Schedule";
 import Profile from "./components/Profile";
 import Departement from "./pages/Admin/Departement/Departement";
 import Message from "./pages/Admin/message/Message";
@@ -53,10 +51,6 @@ export const router = createBrowserRouter([
         element: <Lesson />,
       },
       {
-        path: "schedule",
-        element: <Schedule />,
-      },
-      {
         path: "profile",
         element: <Profile />,
       },
@@ -81,10 +75,6 @@ export const router = createBrowserRouter([
       {
         path: "data-ptk",
         element: <DataPtk />,
-      },
-      {
-        path: "timetable",
-        element: <ScheduleTable />,
       },
       {
         path: "assessment",
@@ -115,10 +105,6 @@ export const router = createBrowserRouter([
       {
         path:"detail-task",
         element:<Detailtask/>
-      },
-      {
-        path:"schedule",
-        element:<ScheduleTable/>
       },
       {
         path:"announcement",

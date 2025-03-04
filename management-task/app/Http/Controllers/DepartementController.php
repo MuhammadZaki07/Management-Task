@@ -2,64 +2,88 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Departement;
+use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class DepartementController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(['status' => 'success', 'data' => Department::all()]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show($id)
     {
-        //
+        $department = Department::find($id);
+        if (!$department) {
+            return response()->json(['status' => 'error', 'message' => 'Department not found'], 404);
+        }
+        return response()->json(['status' => 'success', 'data' => $department]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'department_name' => 'required|string|unique:departments,department_name',
+            'lesson_ids' => 'array',
+            'lesson_ids.*' => 'exists:lessons,id',
+        ]);
+
+        $department = Department::create([
+            'department_name' => $request->department_name,
+        ]);
+
+        if ($request->has('lesson_ids')) {
+            $department->lessons()->attach($request->lesson_ids);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Departemen berhasil dibuat',
+            'data' => $department->load('lessons'),
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Departement $departement)
+    public function update(Request $request, Department $department)
     {
-        //
+        $request->validate([
+            'department_name' => 'sometimes|required|string|unique:departments,department_name,' . $department->id,
+            'lesson_ids' => 'array',
+            'lesson_ids.*' => 'exists:lessons,id',
+        ]);
+
+        $department->update([
+            'department_name' => $request->department_name,
+        ]);
+
+        if ($request->has('lesson_ids')) {
+            $department->lessons()->sync($request->lesson_ids);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Departemen berhasil diperbarui',
+            'data' => $department->load('lessons'),
+        ], 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Departement $departement)
+    public function destroy($id)
     {
-        //
-    }
+        $department = Department::find($id);
+        if (!$department) {
+            return response()->json(['status' => 'error', 'message' => 'Department not found'], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Departement $departement)
-    {
-        //
-    }
+        if ($department->classes()->exists() || $department->teachers()->exists() || $department->lessons()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete department because it still has related data'
+            ], 400);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Departement $departement)
-    {
-        //
+        $department->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'Department deleted successfully']);
     }
 }

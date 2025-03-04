@@ -1,8 +1,19 @@
-import { Outlet } from "react-router-dom"
+import { Navigate, Outlet } from "react-router-dom"
 import Navbar from "../components/Admin/Navbar"
 import LinkSidebar from "../components/Admin/LinkSidebar"
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const StudentLayout = () => {
+  const { user, token } = useContext(AuthContext);
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user || user.role !== "student") {
+    return <Navigate to="/" replace />;
+  }
   return (
     <div className="w-full h-screen flex bg-slate-50">
     <div className="w-72 bg-[#f5f2f0] h-full relative z-50">

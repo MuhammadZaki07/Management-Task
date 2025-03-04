@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departements', function (Blueprint $table) {
+        Schema::create('task_grades', function (Blueprint $table) {
             $table->id();
-            $table->string('departement_name');
+            $table->foreignId('task_submission_id')->constrained('task_submissions')->onDelete('cascade');
+            $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+            $table->integer('score');
+            $table->text('feedback')->nullable();
             $table->timestamps();
         });
     }
@@ -23,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('departements');
+        Schema::dropIfExists('task_grades');
     }
 };

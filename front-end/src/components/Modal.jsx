@@ -5,7 +5,7 @@ export default function Modal({ isOpen, setOpen, children, mode }) {
     <Dialog
       open={isOpen}
       onClose={() => setOpen(false)}
-      className="relative z-10"
+      className="relative z-50"
     >
       <DialogBackdrop
         transition
@@ -23,25 +23,6 @@ export default function Modal({ isOpen, setOpen, children, mode }) {
                 <h1 className="text-3xl font-semibold">{mode}</h1>
               </div>
               <div className="sm:flex sm:items-start py-3">{children}</div>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex cursor-pointer w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-red-500 sm:ml-3 sm:w-auto"
-              >
-                {mode === "message" ? "Oke" : "Submit"}
-              </button>
-              {mode !== "message" && (
-                <button
-                  type="button"
-                  data-autofocus
-                  onClick={() => setOpen(false)}
-                  className="mt-3 cursor-pointer inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 shadow-xs ring-gray-300 ring-inset hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                >
-                  Cancel
-                </button>
-              )}
             </div>
           </DialogPanel>
         </div>

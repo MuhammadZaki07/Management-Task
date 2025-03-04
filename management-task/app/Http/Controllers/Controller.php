@@ -4,20 +4,21 @@ namespace App\Http\Controllers;
 
 abstract class Controller
 {
-    public function response($code,$status,$message,$data = [], $error = []){
+    public function response($code, $status, $message, $data = [], $error = [])
+    {
         $response = [
             "status" => $status,
             "message" => $message
         ];
 
-        if (count($data) > 0) {
+        if (!empty($data)) {
             $response['data'] = $data;
         }
 
-        if (count($error) > 0) {
+        if (!empty($error)) {
             $response['errors'] = $error;
         }
 
-        return response()->json($response,$code);
+        return response()->json($response, $code);
     }
 }

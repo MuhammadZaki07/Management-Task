@@ -11,14 +11,15 @@ export default function AuthProvider({ children }) {
   const getUser = async () => {
     if (!token) return;
     try {
-      const response = await axios.get("/user", {
+      const response = await axios.get("/api/getData", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      const data = response.data;
-      console.log(`Data User : ${data}`);
+      const data = response.data.data.user;
+      // console.log(data);
+      
       if (response.status === 200) {
         setUser(data);
       } else {

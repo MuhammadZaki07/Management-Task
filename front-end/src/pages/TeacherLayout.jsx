@@ -1,8 +1,19 @@
 import LinkSidebar from "../components/Admin/LinkSidebar";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Navbar from "../components/Admin/Navbar";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const TeacherLayout = () => {
+  const { user, token } = useContext(AuthContext);
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user || user.role !== "teacher") {
+    return <Navigate to="/" replace />;
+  }
   return (
     <div className="w-full h-screen flex bg-slate-50">
       <div className="w-72 bg-[#f5f2f0] h-full relative z-50">
@@ -18,7 +29,11 @@ const TeacherLayout = () => {
             logo="bi bi-columns-gap"
             label="Dashboard"
           />
-          <LinkSidebar link="teacher-layout/task" logo="bi bi-list-task" label="Task" />
+          <LinkSidebar
+            link="teacher-layout/task"
+            logo="bi bi-list-task"
+            label="Task"
+          />
           <LinkSidebar
             link="teacher-layout/schedule"
             logo="bi bi-layout-text-sidebar-reverse"

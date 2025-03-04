@@ -8,15 +8,26 @@ class Student extends Model
 {
     protected $fillable = [
         'user_id',
-        'departement_id',
+        'department_id',
         'class_id',
-        'gender',
-        'age',
-        'no_tlp'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id');
+    }
+    public function submissions()
+    {
+        return $this->hasMany(TaskSubmission::class, 'student_id');
+    }
+
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 }

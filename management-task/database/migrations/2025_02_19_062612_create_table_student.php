@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('student', function (Blueprint $table) {
+        Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('departement_id')->constrained('departements')->onDelete('cascade');
-            $table->foreignId('class_id')->constrained('class')->onDelete('cascade');
-            $table->enum('gender',['L','P']);
-            $table->integer('age');
-            $table->integer('no_tlp');
+            $table->foreignId('class_id')->nullable()->constrained('classes')->onDelete('set null');
+            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
+            $table->enum('status',['active', 'graduated', 'expelled'])->default('active');
             $table->timestamps();
         });
     }
