@@ -5,6 +5,7 @@ import Create from "../Departement/Create";
 import Edit from "../Departement/Edit";
 import TableComponent from "../../../components/TableCompoenent";
 import Swal from "sweetalert2";
+import LoadingPage from "../../../components/LoadingPage";
 
 const Departement = () => {
   const [modalState, setModalState] = useState({
@@ -107,21 +108,23 @@ const Departement = () => {
     });
   };
 
+  if(loading){
+    return (
+      <LoadingPage/>
+    )
+  }
+
   return (
-    <div>
-      {loading ? (
-        <p>Loading data...</p>
-      ) : (
-        <TableComponent
-          data={departments}
-          columns={columns}
-          title="Department"
-          description="Manage and view the list of departments, including adding, editing, and deleting department records."
-          onCreate={handleCreate}
-          onEdit={(data) => setModalState({ isOpen: true, mode: "edit", data })}
-          onDelete={handleDelete}
-        />
-      )}
+    <>
+      <TableComponent
+        data={departments}
+        columns={columns}
+        title="Department"
+        description="Manage and view the list of departments, including adding, editing, and deleting department records."
+        onCreate={handleCreate}
+        onEdit={(data) => setModalState({ isOpen: true, mode: "edit", data })}
+        onDelete={handleDelete}
+      />
 
       {modalState.isOpen && (
         <Modal
@@ -136,7 +139,7 @@ const Departement = () => {
           )}
         </Modal>
       )}
-    </div>
+    </>
   );
 };
 

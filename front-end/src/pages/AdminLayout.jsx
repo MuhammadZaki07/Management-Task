@@ -1,10 +1,33 @@
 import { Navigate, Outlet } from "react-router-dom";
 import LinkSidebar from "./../components/Admin/LinkSidebar";
 import Navbar from "../components/Admin/Navbar";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 const AdminLayout = () => {
   const { user, token } = useContext(AuthContext);
+  const [hasUnread, setHasUnread] = useState(false);
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/notifications",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const unreadNotifications = response.data.notifications.some(
+        (notif) => notif.is_read === 0
+      );
+      setHasUnread(unreadNotifications);
+    } catch (error) {
+      console.error("Gagal mengambil notifikasi:", error);
+    }
+  };
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -43,6 +66,11 @@ const AdminLayout = () => {
             label="Students"
           />
           <LinkSidebar
+            link="admin-layout/user-all"
+            logo="bi bi-people-fill"
+            label="Admins"
+          />
+          <LinkSidebar
             link="admin-layout/class"
             logo="bi bi-buildings"
             label="Class"
@@ -61,6 +89,14 @@ const AdminLayout = () => {
             link="admin-layout/announcement"
             logo="bi bi-envelope-fill"
             label="announcement"
+          />
+          <LinkSidebar
+            showBadge={hasUnread}
+            left="left-8"
+            top="top-2"
+            link="admin-layout/notification"
+            logo="bi bi-bell-fill"
+            label="Notification"
           />
           <LinkSidebar
             link="admin-layout/profile"

@@ -15,9 +15,32 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TeacherController extends Controller
 {
+    public function profile()
+    {
+        $teacher = Teacher::where('user_id', Auth::id())
+            ->with(['user', 'department','lesson'])
+            ->first();
+
+        if (!$teacher) {
+            return response()->json(['message' => 'Teacher not found'], 404);
+        }
+
+        return response()->json([
+            'id' => $teacher->user->id,
+            'name' => $teacher->user->name,
+            'gender' => $teacher->user->gender,
+            'email' => $teacher->user->email,
+            'phone' => $teacher->user->no_tlp,
+            'department' => $teacher->department->department_name ?? 'No Department Found',
+            'age' => $teacher->user->age ?? 'N/A',
+            'lesson' => $teacher->lesson->name ?? 'N/A',
+            'lesson_id' => $teacher->lesson_id
+        ]);
+    }
+
     public function index()
     {
-        return response()->json(['status' => 'success', 'data' => Teacher::with('user')->get()]);
+        return response()->json(['status' => 'success', 'data' => Teacher::with('user','lesson')->get()]);
     }
 
     public function getGenderStatistics()
@@ -59,7 +82,8 @@ class TeacherController extends Controller
             'no_tlp' => 'required|string|max:15|unique:users,no_tlp',
             'gender' => 'required|in:L,P',
             'age' => 'required|integer|min:18',
-            'department_id' => 'required|exists:departments,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'lesson_id' => 'required|exists:lessons,id',
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -76,6 +100,7 @@ class TeacherController extends Controller
             $teacher = Teacher::create([
                 'user_id' => $user->id,
                 'department_id' => $validated['department_id'],
+                'lesson_id' => $validated['lesson_id']
             ]);
 
             return response()->json([
@@ -101,7 +126,8 @@ class TeacherController extends Controller
             'gender' => 'sometimes|in:L,P',
             'age' => 'sometimes|integer|min:18',
             'no_tlp' => 'sometimes|string|max:15|unique:users,no_tlp,' . $user->id,
-            'department_id' => 'sometimes|exists:departments,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'lesson_id' => 'sometimes|exists:lessons,id',
         ]);
 
         return DB::transaction(function () use ($user, $teacher, $validated) {
@@ -119,6 +145,7 @@ class TeacherController extends Controller
 
             $teacher->update([
                 'department_id' => $validated['department_id'] ?? $teacher->department_id,
+                'lesson_id' => $validated['lesson_id'] ?? $teacher->lesson_id,
             ]);
 
             $changes = [];

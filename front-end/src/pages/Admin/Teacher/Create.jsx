@@ -14,13 +14,14 @@ const Create = ({ onSuccess, modalState }) => {
     age: "",
     no_tlp: "",
     department_id: "",
+    lesson_id: "",
   });
   const [departments, setDepartments] = useState([]);
+  const [lessons, setLesson] = useState([]);
   const [errors, setErrors] = useState({});
   const [file, setFile] = useState(null);
   const navigate = useNavigate();
   const { token } = useContext(AuthContext);
-
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -38,6 +39,19 @@ const Create = ({ onSuccess, modalState }) => {
         console.error("Failed to fetch departments", error);
       }
     };
+    const fetchLesson = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/lessons", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setLesson(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      }
+    };
+    fetchLesson();
     fetchDepartments();
   }, [token]);
 
@@ -65,12 +79,16 @@ const Create = ({ onSuccess, modalState }) => {
         const formData = new FormData();
         formData.append("file", file);
 
-        await axios.post("http://localhost:8000/api/import-teachers", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await axios.post(
+          "http://localhost:8000/api/import-teachers",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         onSuccess();
       }
     } catch (error) {
@@ -193,7 +211,9 @@ const Create = ({ onSuccess, modalState }) => {
                 ))}
               </select>
               {errors.department_id && (
-                <p className="text-red-500 text-sm">{errors.department_id[0]}</p>
+                <p className="text-red-500 text-sm">
+                  {errors.department_id[0]}
+                </p>
               )}
             </div>
             <div>
@@ -211,6 +231,25 @@ const Create = ({ onSuccess, modalState }) => {
                 <p className="text-red-500 text-sm">{errors.age[0]}</p>
               )}
             </div>
+          </div>
+          <div>
+            <label className="font-medium">Lesson</label>
+            <select
+              name="lesson_id"
+              value={formData.lesson_id}
+              onChange={handleChange}
+              className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+            >
+              <option value="">Select Lesson</option>
+              {lessons.map((less) => (
+                <option key={less.id} value={less.id}>
+                  {less.name}
+                </option>
+              ))}
+            </select>
+            {errors.gender && (
+              <p className="text-red-500 text-sm">{errors.gender[0]}</p>
+            )}
           </div>
         </>
       ) : (

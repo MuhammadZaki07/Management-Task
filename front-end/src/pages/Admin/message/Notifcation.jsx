@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import ShowNotification from "../../Teacher/ShowNotification";
+import Modal from "../../../components/Modal";
+import { AuthContext } from "../../../context/AuthContext";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../context/AuthContext";
-import ShowNotification from "./ShowNotification";
-import Modal from "../../components/Modal";
 
 const Notification = () => {
   const { token, user } = useContext(AuthContext);

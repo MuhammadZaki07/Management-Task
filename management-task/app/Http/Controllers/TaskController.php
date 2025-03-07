@@ -10,13 +10,14 @@ use App\Models\TaskSubmission;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\NotificationHelper;
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::with('assignments')->get();
+        $tasks = Task::with(['teacher.user', 'lesson', 'assignments.student.user', 'class', 'assignedClasses'])->get();
         return response()->json($tasks);
     }
 
@@ -25,207 +26,147 @@ class TaskController extends Controller
         return response()->json($task->load('assignments', 'submissions'));
     }
 
-
     public function store(Request $request)
     {
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'file' => 'nullable|string',
-            'due_date' => 'required|date',
+            'files' => 'nullable|array',
+            'files.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,gif|max:2048',
+            'due_date' => 'nullable|date',
             'assign_to_classes' => 'array',
             'assign_to_students' => 'array',
         ]);
 
-        $task = DB::transaction(function () use ($validated) {
+        $filePaths = [];
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('tasks', 'public');
+                $filePaths[] = $path;
+            }
+        }
+
+        $task = DB::transaction(function () use ($validated, $filePaths) {
+            $dueDate = isset($validated['due_date']) ? Carbon::parse($validated['due_date'])->endOfDay() : null;
             $task = Task::create([
                 'teacher_id' => Auth::user()->teacher->id,
                 'lesson_id' => $validated['lesson_id'],
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
-                'file' => $validated['file'] ?? null,
-                'due_date' => $validated['due_date'],
+                'files' => json_encode($filePaths),
+                'due_date' => $dueDate,
             ]);
 
             $teacherName = Auth::user()->name;
 
-            HistoryHelper::log(
-                Auth::id(),
-                'tugas_diberikan',
-                "Tugas '{$task->title}' telah diberikan oleh {$teacherName} pada pelajaran {$task->lesson->title}"
-            );
+            HistoryHelper::log(Auth::id(), 'tugas_diberikan', "Tugas '{$task->title}' telah diberikan oleh {$teacherName}");
 
-            if (!empty($validated['assign_to_classes'])) {
-                $classAssignments = array_map(fn($classId) => [
-                    'task_id' => $task->id,
-                    'class_id' => $classId,
-                    'target_type' => 'class',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ], $validated['assign_to_classes']);
-
-                TaskAssignment::insert($classAssignments);
-
-                $students = Student::whereIn('class_id', $validated['assign_to_classes'])->pluck('user_id');
-                foreach ($students as $studentId) {
-                    NotificationHelper::send($studentId, 'new_task', "Ada tugas baru dari $teacherName: " . $task->title);
-                }
-            }
-
-            if (!empty($validated['assign_to_students'])) {
-                $studentAssignments = array_map(fn($studentId) => [
-                    'task_id' => $task->id,
-                    'student_id' => $studentId,
-                    'target_type' => 'individual',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ], $validated['assign_to_students']);
-
-                TaskAssignment::insert($studentAssignments);
-
-                foreach ($validated['assign_to_students'] as $studentId) {
-                    NotificationHelper::send($studentId, 'new_task', "Ada tugas baru dari $teacherName: " . $task->title);
-                }
-            }
+            $this->assignTask($task->id, $validated);
 
             return $task;
         });
 
-        return response()->json([
-            'message' => 'Tugas berhasil dibuat dan dikirim!',
-            'task' => $task
-        ], 201);
+        return response()->json(['message' => 'Task Success Created!', 'task' => $task], 201);
     }
-
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'file' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'assign_to_classes' => 'array',
-            'assign_to_students' => 'array',
+            'due_date' => 'nullable|date_format:Y-m-d H:i:s',
         ]);
 
         $task = Task::findOrFail($id);
-
         $isGraded = TaskSubmission::whereHas('taskAssignment', function ($query) use ($id) {
             $query->where('task_id', $id);
         })->where('status', 'graded')->exists();
 
         if ($isGraded) {
-            return response()->json([
-                'message' => 'Tugas tidak bisa diubah karena sudah dinilai!'
-            ], 403);
+            return response()->json(['message' => 'Tugas tidak bisa diubah karena sudah dinilai!'], 403);
         }
 
-        DB::transaction(function () use ($task, $validated, $id, $request) {
-            // Menyimpan riwayat sebelum tugas diperbarui
-            HistoryHelper::log(
-                Auth::id(),
-                'tugas_diubah',
-                "Tugas '{$task->title}' telah diubah. Judul sebelumnya: '{$task->title}', Deskripsi sebelumnya: '{$task->description}'"
-            );
+        DB::transaction(function () use ($task, $validated, $request) {
+            $teacherName = Auth::user()->name;
+            HistoryHelper::log(Auth::id(), 'tugas_diubah', "Tugas '{$task->title}' telah diubah oleh {$teacherName}");
 
-            // Update tugas
             $task->update([
                 'title' => $validated['title'] ?? $task->title,
                 'description' => $validated['description'] ?? $task->description,
-                'file' => $validated['file'] ?? $task->file,
-                'due_date' => $validated['due_date'] ?? $task->due_date,
+                'due_date' => $request->has('due_date') && $request->due_date !== null ? $validated['due_date'] : null, // 🔥 FIX: Jika tidak dikirim, jadikan NULL
             ]);
-
-            $teacherName = Auth::user()->name;
-            $taskTitle = $task->title;
-
-            // Menangani assignment ke kelas
-            if (isset($validated['assign_to_classes'])) {
-                TaskAssignment::where('task_id', $id)->whereNotNull('class_id')->delete();
-
-                $classAssignments = array_map(fn($classId) => [
-                    'task_id' => $id,
-                    'class_id' => $classId,
-                    'target_type' => 'class',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ], $validated['assign_to_classes']);
-
-                TaskAssignment::insert($classAssignments);
-
-                $students = Student::whereIn('class_id', $validated['assign_to_classes'])->pluck('user_id');
-                foreach ($students as $studentId) {
-                    NotificationHelper::send($studentId, 'new_task', "Tugas '$taskTitle' telah diperbarui oleh $teacherName.");
-                }
-            }
-
-            // Menangani assignment ke siswa individual
-            if (isset($validated['assign_to_students'])) {
-                TaskAssignment::where('task_id', $id)->whereNotNull('student_id')->delete();
-
-                $studentAssignments = array_map(fn($studentId) => [
-                    'task_id' => $id,
-                    'student_id' => $studentId,
-                    'target_type' => 'individual',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ], $validated['assign_to_students']);
-
-                TaskAssignment::insert($studentAssignments);
-
-                foreach ($validated['assign_to_students'] as $studentId) {
-                    NotificationHelper::send($studentId, 'new_task', "Tugas '$taskTitle' telah diperbarui oleh $teacherName.");
-                }
-            }
         });
 
-        return response()->json([
-            'message' => 'Tugas berhasil diperbarui!',
-            'task' => $task
-        ], 200);
+        return response()->json(['message' => 'Tugas berhasil diperbarui!', 'task' => $task], 200);
+    }
+
+    private function assignTask($taskId, $validated)
+    {
+        TaskAssignment::where('task_id', $taskId)->delete();
+
+        $teacherName = Auth::user()->name;
+        $task = Task::find($taskId);
+        $taskTitle = $task->title;
+
+        // Assign ke kelas
+        if (!empty($validated['assign_to_classes'])) {
+            $classAssignments = array_map(fn($classId) => [
+                'task_id' => $taskId,
+                'class_id' => $classId,
+                'target_type' => 'class',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], $validated['assign_to_classes']);
+
+            TaskAssignment::insert($classAssignments);
+            $students = Student::whereIn('class_id', $validated['assign_to_classes'])->pluck('user_id');
+            foreach ($students as $studentId) {
+                NotificationHelper::send($studentId, 'new_task', "Tugas '$taskTitle' diperbarui oleh $teacherName.");
+            }
+        }
+
+        if (!empty($validated['assign_to_students'])) {
+            $studentAssignments = array_map(fn($studentId) => [
+                'task_id' => $taskId,
+                'student_id' => $studentId,
+                'target_type' => 'individual',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], $validated['assign_to_students']);
+
+            TaskAssignment::insert($studentAssignments);
+            foreach ($validated['assign_to_students'] as $studentId) {
+                NotificationHelper::send($studentId, 'new_task', "Tugas '$taskTitle' diperbarui oleh $teacherName.");
+            }
+        }
     }
 
     public function destroy(Task $task)
     {
-        $hasGradedSubmissions = $task->submissions()->where('status', 'graded')->exists();
-
-        if ($hasGradedSubmissions) {
-            return response()->json(['message' => 'Task tidak bisa dihapus karena ada submission yang sudah dinilai!'], 403);
-        }
-
-        $studentIds = $task->assignments()->pluck('student_id')->filter()->toArray();
-
-        DB::transaction(function () use ($task, $studentIds) {
-            // Menyimpan riwayat penghapusan tugas
-            HistoryHelper::log(
-                Auth::id(),
-                'tugas_dihapus',
-                "Tugas '{$task->title}' telah dihapus. Penghapusan dilakukan oleh " . Auth::user()->name
-            );
-
-            // Menghapus tugas, assignments, dan submissions
-            $task->assignments()->delete();
-            $task->submissions()->delete();
-            $task->delete();
-        });
-
-        foreach ($studentIds as $studentId) {
-            NotificationHelper::send(
-                $studentId,
-                'task_deleted',
-                'Tugas "' . $task->title . '" telah dihapus oleh guru.'
-            );
-        }
-
-        NotificationHelper::send(
-            $task->teacher_id,
-            'task_deleted',
-            'Tugas "' . $task->title . '" telah dihapus dari sistem.'
-        );
-
+        $task->delete();
         return response()->json(['message' => 'Task deleted successfully']);
     }
 
+
+
+    public function getTaskChartData()
+    {
+        $user = Auth::user();
+        $tasks = DB::table('tasks')
+            ->select(DB::raw('YEARWEEK(created_at, 1) as week_number'), DB::raw('COUNT(*) as total_tasks'))
+            ->where('teacher_id', $user->id)
+            ->groupBy('week_number')
+            ->orderBy('week_number')
+            ->get();
+
+        $formattedData = $tasks->map(function ($task, $index) {
+            return [
+                'week' => "Week " . ($index + 1),
+                'total_tasks' => $task->total_tasks,
+            ];
+        });
+
+        return response()->json($formattedData);
+    }
 }

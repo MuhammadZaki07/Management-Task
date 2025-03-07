@@ -35,18 +35,22 @@ class NotificationController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Notification marked as read']);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $notification = Notification::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->first();
+        $ids = $request->input('ids');
 
-        if (!$notification) {
-            return response()->json(['status' => 'error', 'message' => 'Notification not found'], 404);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid request'], 400);
         }
 
-        $notification->delete();
+        $deleted = Notification::whereIn('id', $ids)
+            ->where('user_id', Auth::id())
+            ->delete();
 
-        return response()->json(['status' => 'success', 'message' => 'Notification deleted']);
+        if ($deleted) {
+            return response()->json(['status' => 'success', 'message' => 'Notifications deleted']);
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'No notifications found'], 404);
+        }
     }
 }

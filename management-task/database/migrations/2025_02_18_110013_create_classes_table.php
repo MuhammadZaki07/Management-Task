@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('class_name', 100);
             $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
             $table->foreignId('homeroom_teacher_id')->nullable()->constrained('teachers')->onDelete('set null');
+            $table->foreignId('academic_year_id')->constrained()->onDelete('cascade');
             $table->integer('max_students')->default(30);
             $table->integer('grade_level')->nullable();
             $table->timestamps();

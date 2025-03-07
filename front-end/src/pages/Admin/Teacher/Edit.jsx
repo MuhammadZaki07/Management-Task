@@ -11,23 +11,41 @@ const Edit = ({ teacher, onSuccess }) => {
     age: teacher?.user?.age || "",
     no_tlp: teacher?.user?.no_tlp || "",
     department_id: teacher?.department_id || "",
+    lesson_id: teacher?.lesson_id || "",
   });
   const [departments, setDepartments] = useState([]);
+  const [lessons, setLesson] = useState([]);
   const [errors, setErrors] = useState({});
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/departments", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "http://localhost:8000/api/departments",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setDepartments(response.data.data);
       } catch (error) {
         console.error("Failed to fetch departments", error);
         setErrors(error.response.data.errors);
       }
     };
+    const fetchLesson = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/lessons", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setLesson(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      }
+    };
+    fetchLesson();
     fetchDepartments();
   }, []);
 
@@ -39,9 +57,13 @@ const Edit = ({ teacher, onSuccess }) => {
     e.preventDefault();
     setErrors({});
     try {
-      await axios.put(`http://localhost:8000/api/teachers/${teacher.id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `http://localhost:8000/api/teachers/${teacher.id}`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       onSuccess();
     } catch (error) {
       if (error.response && error.response.data.errors) {
@@ -55,52 +77,121 @@ const Edit = ({ teacher, onSuccess }) => {
       <div className="grid grid-cols-2 gap-5">
         <div>
           <label className="font-medium">Email</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none" disabled />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+            disabled
+          />
         </div>
         <div>
           <label className="font-medium">Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none" />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name[0]}</p>}
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+          />
+          {errors.name && (
+            <p className="text-red-500 text-sm">{errors.name[0]}</p>
+          )}
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-5">
         <div>
           <label className="font-medium">Gender</label>
-          <select name="gender" value={formData.gender} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none">
+          <select
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+          >
             <option value="">Pilih Gender</option>
             <option value="L">Laki-laki</option>
             <option value="P">Perempuan</option>
           </select>
-          {errors.gender && <p className="text-red-500 text-sm">{errors.gender[0]}</p>}
+          {errors.gender && (
+            <p className="text-red-500 text-sm">{errors.gender[0]}</p>
+          )}
         </div>
         <div>
           <label className="font-medium">Telephone</label>
-          <input type="text" name="no_tlp" value={formData.no_tlp} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none" />
-          {errors.no_tlp && <p className="text-red-500 text-sm">{errors.no_tlp[0]}</p>}
+          <input
+            type="text"
+            name="no_tlp"
+            value={formData.no_tlp}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+          />
+          {errors.no_tlp && (
+            <p className="text-red-500 text-sm">{errors.no_tlp[0]}</p>
+          )}
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-5">
         <div>
           <label className="font-medium">Department</label>
-          <select name="department_id" value={formData.department_id} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none">
+          <select
+            name="department_id"
+            value={formData.department_id}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+          >
             <option value="">Pilih Departemen</option>
             {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>{dept.department_name}</option>
+              <option key={dept.id} value={dept.id}>
+                {dept.department_name}
+              </option>
             ))}
           </select>
-          {errors.department_id && <p className="text-red-500 text-sm">{errors.department_id[0]}</p>}
+          {errors.department_id && (
+            <p className="text-red-500 text-sm">{errors.department_id[0]}</p>
+          )}
         </div>
         <div>
           <label className="font-medium">Age</label>
-          <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none" min="18" />
-          {errors.age && <p className="text-red-500 text-sm">{errors.age[0]}</p>}
+          <input
+            type="number"
+            name="age"
+            value={formData.age}
+            onChange={handleChange}
+            className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+            min="18"
+          />
+          {errors.age && (
+            <p className="text-red-500 text-sm">{errors.age[0]}</p>
+          )}
         </div>
       </div>
-      
+      <div>
+        <label className="font-medium">Lesson</label>
+        <select
+          name="lesson_id"
+          value={formData.lesson_id}
+          onChange={handleChange}
+          className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
+        >
+          <option value="">Select Lesson</option>
+          {lessons.map((less) => (
+            <option key={less.id} value={less.id}>
+              {less.name}
+            </option>
+          ))}
+        </select>
+        {errors.gender && (
+          <p className="text-red-500 text-sm">{errors.gender[0]}</p>
+        )}
+      </div>
+
       <div className="w-1/2">
-        <button className="bg-orange-400 py-1.5 rounded-lg text-white px-4 cursor-pointer font-medium">Update</button>
+        <button className="bg-orange-400 py-1.5 rounded-lg text-white px-4 cursor-pointer font-medium">
+          Update
+        </button>
       </div>
     </form>
   );

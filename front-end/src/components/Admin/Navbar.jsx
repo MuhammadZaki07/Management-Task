@@ -1,13 +1,14 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
-import Swal from "sweetalert2"; // ✅ Import SweetAlert2
+import Swal from "sweetalert2";
 
 const Navbar = () => {
-  const { setToken, setUser } = useContext(AuthContext);
+  const { setToken, setUser, token, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const [hasUnread, setHasUnread] = useState(false);
 
   const handleLogout = async () => {
     Swal.fire({
@@ -47,6 +48,28 @@ const Navbar = () => {
     });
   };
 
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/notifications",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const unreadNotifications = response.data.notifications.some(
+        (notif) => notif.is_read === 0
+      );
+      setHasUnread(unreadNotifications);
+    } catch (error) {
+      console.error("Gagal mengambil notifikasi:", error);
+    }
+  };
+
   return (
     <div className="w-full py-7 items-center flex gap-15 justify-between px-16 border-b border-[#5b6087]/[0.1]">
       <div className="flex items-center gap-10">
@@ -56,15 +79,32 @@ const Navbar = () => {
         </h1>
       </div>
       <div className="flex gap-15">
+        {user.role === "admin" && (
+          <>
+            <Link to={`lesson`}>
+              <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-journal-plus"></i>
+            </Link>
+            <Link to={`profile`}>
+              <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-person-circle"></i>
+            </Link>
+          </>
+        )}
+        <Link
+          to={`${
+            user.role !== "admin"
+              ? "/teacher-layout/notification"
+              : "/admin-layout/notification"
+          }`}
+          className="relative"
+        >
+          <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-bell-fill"></i>
+          {hasUnread && (
+            <div className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-0"></div>
+          )}
+        </Link>
         <button onClick={handleLogout} className="cursor-pointer">
           <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-box-arrow-right"></i>
         </button>
-        <Link to={`lesson`}>
-          <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-journal-plus"></i>
-        </Link>
-        <Link to={`profile`}>
-          <i className="text-xl text-slate-700 hover:text-slate-400 font-semibold bi bi-person-circle"></i>
-        </Link>
       </div>
     </div>
   );

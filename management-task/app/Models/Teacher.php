@@ -11,11 +11,21 @@ class Teacher extends Model
     protected $fillable = [
         'user_id',
         'department_id',
+        'lesson_id'
     ];
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
     }
 
     public function classes(): HasMany
@@ -37,5 +47,4 @@ class Teacher extends Model
     {
         return $this->hasMany(TaskGrade::class, 'teacher_id');
     }
-
 }

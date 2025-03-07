@@ -11,6 +11,11 @@ const StudentLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
+  if(user === null){
+    return (
+      <p className="hidden">Loading...</p>
+    )
+  }
   if (!user || user.role !== "student") {
     return <Navigate to="/" replace />;
   }
@@ -33,11 +38,6 @@ const StudentLayout = () => {
           link="student-layout/data-ptk"
           logo="bi bi-people-fill"
           label="Data PTK"
-        />
-        <LinkSidebar
-          link="student-layout/timetable"
-          logo="bi bi-table"
-          label="Lesson timetable"
         />
         <LinkSidebar
           link="student-layout/assessment"

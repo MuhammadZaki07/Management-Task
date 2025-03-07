@@ -16,4 +16,8 @@ class TaskAssignment extends Model
         return $this->belongsTo(Classes::class, 'class_id');
     }
 
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id');
+    }
 }

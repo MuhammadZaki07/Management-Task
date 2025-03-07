@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import Modal from "../../../components/Modal";
 import Create from "./Create";
 import Edit from "./Edit";
+import LoadingPage from "../../../components/LoadingPage";
 
 const TeacherPage = () => {
   const [teachers, setTeachers] = useState([]);
@@ -30,6 +31,7 @@ const TeacherPage = () => {
       } catch (err) {
         setError("Gagal mengambil data guru");
         console.error("Error fetching teachers:", err);
+        console.log(error);
       } finally {
         setLoading(false);
       }
@@ -54,9 +56,11 @@ const TeacherPage = () => {
     let failedDeletes = [];
     for (const id of selectedIds) {
       try {
+        setLoading(true)
         await axios.delete(`http://localhost:8000/api/teachers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        setLoading(false)
       } catch (error) {
         console.error(
           `Gagal menghapus guru ID ${id}:`,
@@ -153,9 +157,19 @@ const TeacherPage = () => {
       header: "No Telepon",
       cell: (info) => info.getValue(),
     },
+    {
+      accessorKey: "lesson.name",
+      header: "Teacher from maple",
+      cell: (info) => info.getValue(),
+    },
   ];
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <>
+        <LoadingPage />
+      </>
+    );
 
   return (
     <>

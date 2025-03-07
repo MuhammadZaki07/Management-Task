@@ -1,27 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const TodoList = () => {
+  const { user } = useContext(AuthContext); // Ambil user yang sedang login
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
 
-  // Ambil data dari localStorage saat pertama kali komponen dimuat
-  useEffect(() => {
-    const savedTodos = JSON.parse(localStorage.getItem("todos")) || [];
-    setTodos(savedTodos);
-  }, []);
+  // Buat key unique untuk menyimpan todo berdasarkan user login
+  const storageKey = `todos_${user.id}`;
 
-  // Simpan data ke localStorage setiap kali todos diperbarui
   useEffect(() => {
-    if (todos.length > 0) {
-      localStorage.setItem("todos", JSON.stringify(todos));
-    }
-  }, [todos]);
+    const savedTodos = JSON.parse(localStorage.getItem(storageKey)) || [];
+    setTodos(savedTodos);
+  }, [storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(todos));
+  }, [todos, storageKey]);
 
   const addTodo = () => {
     if (input.trim() !== "") {
       const newTodos = [...todos, input.trim()];
       setTodos(newTodos);
-      localStorage.setItem("todos", JSON.stringify(newTodos));
       setInput("");
     }
   };
@@ -29,13 +29,6 @@ const TodoList = () => {
   const deleteTodo = (index) => {
     const newTodos = todos.filter((_, i) => i !== index);
     setTodos(newTodos);
-    localStorage.setItem("todos", JSON.stringify(newTodos));
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      addTodo();
-    }
   };
 
   return (
@@ -58,7 +51,6 @@ const TodoList = () => {
         type="text" 
         value={input} 
         onChange={(e) => setInput(e.target.value)} 
-        onKeyDown={handleKeyPress} 
         placeholder="Add a new task..."
         className="py-2 px-4 rounded-md focus:outline-none border border-slate-500/[0.5]"
       />
@@ -67,6 +59,7 @@ const TodoList = () => {
           <thead className="border-b-2 border-orange-300">
             <tr>
               <th className="font-medium text-lg text-orange-500 py-2 text-left">Content</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>

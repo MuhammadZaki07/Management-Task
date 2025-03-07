@@ -14,7 +14,8 @@ class Classes extends Model
         'department_id',
         'homeroom_teacher_id',
         'max_students',
-        'grade_level'
+        'grade_level',
+        'academic_year_id'
     ];
 
     public function students()
@@ -39,5 +40,10 @@ class Classes extends Model
     public function taskAssignments()
     {
         return $this->hasMany(TaskAssignment::class, 'class_id');
+    }
+
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 }

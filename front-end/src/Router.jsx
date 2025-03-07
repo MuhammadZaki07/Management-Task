@@ -23,7 +23,9 @@ import DashboardTeacher from "./pages/Teacher/Dashboard";
 import Task from "./pages/Teacher/Task/Task";
 import Detailtask from "./pages/Teacher/Task/Detailtask";
 import Notification from "./pages/Teacher/Notification";
+import NotificationAdmin from "./pages/Admin/message/Notifcation";
 import DetailTask from "./pages/Student/DetailTask";
+import Admin from "./pages/Admin/user/Admin";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +63,14 @@ export const router = createBrowserRouter([
       {
         path: "announcement",
         element: <Message />,
+      },
+      {
+        path: "notification",
+        element: <NotificationAdmin />,
+      },
+      {
+        path: "user-all",
+        element: <Admin />,
       },
     ],
   },
@@ -103,7 +113,7 @@ export const router = createBrowserRouter([
         element:<Task/>
       },
       {
-        path:"detail-task",
+        path:"detail-task/:id",
         element:<Detailtask/>
       },
       {

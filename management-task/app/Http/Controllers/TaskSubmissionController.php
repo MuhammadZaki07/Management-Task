@@ -6,6 +6,7 @@ use App\Helpers\HistoryHelper;
 use Illuminate\Http\Request;
 use App\Models\TaskSubmission;
 use App\Helpers\NotificationHelper;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class TaskSubmissionController extends Controller
@@ -255,6 +256,26 @@ class TaskSubmissionController extends Controller
             'message' => $message,
             'submission' => $submission
         ], 200);
+    }
+
+    public function getComplateTask()
+    {
+        $studentId = Auth::id();
+
+        $completedTasks = TaskSubmission::where('student_id', $studentId)
+            ->where('status', 'graded')
+            ->where('updated_at', '>=', Carbon::now()->subDays(7))
+            ->with(['taskAssignment.task'])
+            ->get()
+            ->map(function ($submission) {
+                return [
+                    'task_id' => $submission->taskAssignment->task->id,
+                    'task_title' => $submission->taskAssignment->task->title,
+                    'graded_at' => $submission->updated_at,
+                ];
+            });
+
+        return response()->json($completedTasks);
     }
 
 }

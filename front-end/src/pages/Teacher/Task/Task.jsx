@@ -1,55 +1,90 @@
-import { useState } from "react";
-import Modal from "../../../components/Modal";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Create from "../../Admin/Teacher/Create";
-import Edit from "../../Admin/Teacher/Edit";
+import axios from "axios";
+import Modal from "../../../components/Modal";
+import Create from "./Create";
+import Edit from "./Edit";
+import Swal from "sweetalert2";
 
 const Task = () => {
   const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const tasks = [
-    {
-      id: 1,
-      name: "Project Website",
-      class: "11-RPL-A",
-      date: "10-02-2025",
-      lesson: "Web Development",
-      teacher: "Mr. Smith",
-      documents: 3,
-      deadline: "12-02-2025 - 15-02-2025",
-    },
-    {
-      id: 2,
-      name: "Network Setup",
-      class: "10-TKJ-B",
-      date: "12-02-2025",
-      lesson: "Networking",
-      teacher: "Ms. Johnson",
-      documents: 2,
-      deadline: "14-02-2025 - 17-02-2025",
-    },
-    {
-      id: 3,
-      name: "3D Animation",
-      class: "12-Animasi-C",
-      date: "15-02-2025",
-      lesson: "Animation",
-      teacher: "Mr. Anderson",
-      documents: 4,
-      deadline: "17-02-2025 - 20-02-2025",
-    },
-    {
-      id: 4,
-      name: "Car Engine Analysis",
-      class: "11-Otomotif-A",
-      date: "18-02-2025",
-      lesson: "Mechanical Engineering",
-      teacher: "Mr. Brown",
-      documents: 1,
-      deadline: "20-02-2025 - 23-02-2025",
-    },
-  ];
-  
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/tasks", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = () => {
+    setModalState({ isOpen: true, mode: "create" });
+  };
+
+  const handleSuccess = () => {
+    setModalState({ isOpen: false, mode: "" });
+    fetchTasks();
+  };
+
+  const handleEdit = (task) => {
+    setModalState({ isOpen: true, mode: "edit", task });
+  };
+
+  const handleDelete = async (taskId) => {
+    Swal.fire({
+      title: "Apakah kamu yakin?",
+      text: "Tugas ini akan dihapus secara permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `http://localhost:8000/api/tasks/${taskId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: response.data.message,
+            confirmButtonColor: "#3085d6",
+          });
+
+          fetchTasks();
+        } catch (error) {
+          console.error("Error deleting task", error);
+          Swal.fire({
+            icon: "error",
+            title: "Gagal Menghapus",
+            text:
+              error.response?.data?.message ||
+              "Terjadi kesalahan saat menghapus tugas.",
+            confirmButtonColor: "#d33",
+          });
+        }
+      }
+    });
+  };
 
   return (
     <div className="px-16">
@@ -57,45 +92,122 @@ const Task = () => {
         <div className="flex flex-col gap-3">
           <h1 className="font-bold text-4xl text-worn">Task</h1>
           <p className="font-normal text-slate-500">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque,
-            commodi.
+            List of tasks that have been made by the teacher.
           </p>
         </div>
         <div>
           <button
-            onClick={() => setModalState({ isOpen: true, mode: "create" })}
-            className="border border-orange-500 cursor-pointer text-white font-semibold rounded-lg py-3 px-5"
+            onClick={handleCreate}
+            className="border border-orange-500 cursor-pointer text-orange-400 font-semibold rounded-lg py-3 px-5"
           >
-            <i className="bi bi-file-earmark-plus-fill text-orange-500"></i>
+            <i className="bi bi-file-earmark-plus-fill text-orange-500"></i>{" "}
+            Create Task
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-5 w-full py-10">
-        {tasks.map((task) => (
-          <Link to={`/teacher-layout/detail-task`} key={task.id} className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
-            <h1 className="font-semibold text-2xl text-slate-800">
-              {task.name}
-            </h1>
-            <p className="text-slate-500 text-xs font-normal mt-2">
-              {task.class} | {task.date}
-            </p>
-            <p className="text-slate-500 text-sm font-normal mt-2">
-              Lesson: {task.lesson} | {task.teacher}
-            </p>
-            <div className="flex gap-5 items-center py-3 mb-3">
-              <div className="w-3 h-3 rounded-full bg-red-600 animate-ping"></div>
-              <p className="text-slate-500 text-xs font-normal">Deadline : {task.deadline}</p>
-            </div>
-            <div className="flex gap-5">
-              <div className="flex gap-3 text-slate-500 text-sm">
-                <i className="bi bi-file-earmark-text-fill"></i>
-                <p>{task.documents < 1 ? "tidak ada document" : task.documents + " Document"}{task.documents > 1 ? "s" : ""}</p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {loading ? (
+        <p>Loading tasks...</p>
+      ) : (
+        <div className="grid grid-cols-4 gap-5 w-full py-10">
+          {tasks.length === 0 ? (
+            <p>No Task</p>
+          ) : (
+            tasks.map((task) => (
+              <Link
+                to={`/teacher-layout/detail-task/${task.id}`}
+                key={task.id}
+                className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+              >
+                <div className="flex gap-3 items-center">
+                  <h1 className="font-semibold text-2xl text-slate-800">
+                    {task.title}
+                  </h1>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleDelete(task.id);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <i className="bi bi-trash text-lg text-red-500"></i>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleEdit(task);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <i className="bi bi-pencil-square text-lg text-yellow-500"></i>
+                    </button>
+                  </div>
+                </div>
+                <div className="text-slate-500 text-xs font-normal mt-2 flex gap-1">
+                  <div>
+                    {task.assigned_classes.length > 0
+                      ? task.assigned_classes
+                          .map((cls) => cls.class_name)
+                          .join(", ")
+                      : task.assignments.length > 0
+                      ? task.assignments
+                          .map((a) =>
+                            a.student ? a.student.user.name : "Tidak ada target"
+                          )
+                          .join(", ")
+                      : "all students"}
+                  </div>
+                  <div>| {new Date(task.created_at).toLocaleDateString()}</div>
+                </div>
+
+                <p className="text-slate-500 text-sm font-normal mt-2">
+                  {task.lesson.name} | Teacher: {task.teacher.user.name}
+                </p>
+                <div className="flex gap-5 items-center py-3 mb-3">
+                  {task.due_date ? (
+                    <>
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          new Date(task.due_date) - new Date() <=
+                          10 * 60 * 60 * 1000
+                            ? "bg-red-600 animate-ping"
+                            : "bg-green-500 animate-bounce"
+                        }`}
+                      ></div>
+                      <p className="text-slate-500 text-xs font-normal">
+                        Deadline:{" "}
+                        {new Date(task.due_date).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-slate-500 text-xs font-normal">
+                      No Deadline
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-5">
+                  <div className="flex gap-3 text-slate-500 text-sm">
+                    <i className="bi bi-file-earmark-text-fill"></i>
+                    <p>
+                      {task.files && JSON.parse(task.files).length > 0
+                        ? `${JSON.parse(task.files).length} Dokumen`
+                        : "Tidak ada dokumen"}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      )}
 
       {modalState.isOpen && (
         <Modal
@@ -103,7 +215,11 @@ const Task = () => {
           setOpen={setModalState}
           mode={modalState.mode}
         >
-          {modalState.mode === "create" ? <Create /> : <Edit />}
+          {modalState.mode === "create" ? (
+            <Create onSuccess={handleSuccess} />
+          ) : (
+            <Edit task={modalState.task} onSuccess={handleSuccess} />
+          )}
         </Modal>
       )}
     </div>

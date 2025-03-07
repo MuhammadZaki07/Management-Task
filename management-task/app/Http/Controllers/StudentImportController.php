@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\StudentsImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Validator;
-
+use App\Imports\StudentsImport;
 class StudentImportController extends Controller
 {
     public function import(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'file' => 'required|mimes:xlsx,xls',
+            'department_id' => 'required|exists:departments,id',
+            'class_id' => 'required|exists:classes,id',
         ]);
 
         if ($validator->fails()) {
@@ -20,7 +21,7 @@ class StudentImportController extends Controller
         }
 
         try {
-            Excel::import(new StudentsImport, $request->file('file'));
+            Excel::import(new StudentsImport($request->department_id, $request->class_id), $request->file('file'));
 
             return response()->json([
                 'status' => 'success',
@@ -29,8 +30,9 @@ class StudentImportController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Import failed: ' . $e->getMessage(),
-            ], 500);
+                'message' => "Import failed: " . $e->getMessage(),
+            ], 400);
         }
+
     }
 }

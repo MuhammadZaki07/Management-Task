@@ -1,14 +1,40 @@
 import LinkSidebar from "../components/Admin/LinkSidebar";
 import { Navigate, Outlet } from "react-router-dom";
 import Navbar from "../components/Admin/Navbar";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 const TeacherLayout = () => {
   const { user, token } = useContext(AuthContext);
+    const [hasUnread, setHasUnread] = useState(false);
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/notifications",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const unreadNotifications = response.data.notifications.some(
+        (notif) => notif.is_read === 0
+      );
+      setHasUnread(unreadNotifications);
+    } catch (error) {
+      console.error("Gagal mengambil notifikasi:", error);
+    }
+  };
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+  
+  if (user === null) {
+    return <div className="hidden">Loading...</div>;
   }
 
   if (!user || user.role !== "teacher") {
@@ -35,11 +61,6 @@ const TeacherLayout = () => {
             label="Task"
           />
           <LinkSidebar
-            link="teacher-layout/schedule"
-            logo="bi bi-layout-text-sidebar-reverse"
-            label="Schedule"
-          />
-          <LinkSidebar
             link="teacher-layout/announcement"
             logo="bi bi-envelope-fill"
             label="announcement"
@@ -48,14 +69,9 @@ const TeacherLayout = () => {
             link="teacher-layout/notification"
             logo="bi bi-bell-fill"
             label="Notification"
-            showBadge={true}
+            showBadge={hasUnread}
             left={`left-8`}
             top={`top-2`}
-          />
-          <LinkSidebar
-            link="logout"
-            logo="bi bi-box-arrow-left"
-            label="Log-out"
           />
         </div>
       </div>

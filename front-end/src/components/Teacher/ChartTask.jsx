@@ -1,22 +1,10 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
+import axios from "axios";
 
 const ChartTask = () => {
-  const [state, setState] = React.useState({
-    series: [
-      {
-        name: "Net Profit",
-        data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-      },
-      {
-        name: "Revenue",
-        data: [76, 85, 101, 98, 87, 105, 91, 114, 94],
-      },
-      {
-        name: "Zaki",
-        data: [81, 85, 10, 49, 87, 80, 76, 120, 70],
-      },
-    ],
+  const [state, setState] = useState({
+    series: [],
     options: {
       chart: {
         type: "bar",
@@ -40,17 +28,7 @@ const ChartTask = () => {
         colors: ["transparent"],
       },
       xaxis: {
-        categories: [
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-        ],
+        categories: [],
       },
       yaxis: {
         title: {
@@ -69,9 +47,52 @@ const ChartTask = () => {
       },
     },
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      setLoading(true);
+  
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/tasks/teacher/chart",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+  
+        const data = response.data;
+        const categories = data.map((item) => item.week);
+        const seriesData = data.map((item) => item.total_tasks);
+  
+        setState((prevState) => ({
+          ...prevState,
+          series: [{ name: "Total Tasks", data: seriesData }],
+          options: { ...prevState.options, xaxis: { categories } },
+        }));
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchChartData();
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="bg-gray-100 w-full rounded-xl p-10 space-y-5 flex-[3] animate-pulse">
+        <div className="bg-slate-400 w-1/2 h-5 rounded-xl"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#f5f2f0] w-full rounded-xl p-10 space-y-5 flex-[3]">
-      <h1 className="font-semibold text-2xl text-[#5b6087]">Completed task</h1>
+      <h1 className="font-semibold text-2xl text-[#5b6087]">Task</h1>
       <ReactApexChart
         options={state.options}
         series={state.series}

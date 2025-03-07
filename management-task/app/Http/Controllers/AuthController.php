@@ -8,11 +8,13 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+
     public function getData(Request $request)
     {
         return $this->response(200, 'success', 'User data retrieved successfully', ['user' => $request->user()]);
@@ -92,7 +94,6 @@ class AuthController extends Controller
         });
     }
 
-
     public function logout(Request $request)
     {
         $user = $request->user();
@@ -101,5 +102,71 @@ class AuthController extends Controller
             return $this->response(200, 'success', 'Logout successful');
         }
         return $this->response(401, 'invalid_token', 'Invalid or expired token');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|max:255|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:15',
+            'gender' => 'required|in:L,P',
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->no_tlp = $request->phone;
+        $user->gender = $request->gender;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'logout' => $request->filled('password'),
+        ], 200);
+    }
+    public function index()
+    {
+        $admins = User::where('role', 'admin')->get();
+        return response()->json($admins);
+    }
+
+    public function destroy(Request $request)
+    {
+        $ids = $request->input('ids');
+        if (!$ids || !is_array($ids)) {
+            return response()->json(['message' => 'No admins selected for deletion.'], 400);
+        }
+
+        User::whereIn('id', $ids)->delete();
+
+        return response()->json(['message' => 'Admins deleted successfully.']);
+    }
+
+    public function updateAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+        ]);
+
+        $admin = User::where('role', 'admin')->find($id);
+        if (!$admin) {
+            return response()->json(['message' => 'Admin tidak ditemukan'], 404);
+        }
+
+        $admin->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        return response()->json(['message' => 'Admin berhasil diperbarui', 'admin' => $admin]);
     }
 }

@@ -5,6 +5,7 @@ import Modal from "../../../components/Modal";
 import Create from "../Student/Create";
 import Edit from "../Student/Edit";
 import TableComponent from "../../../components/TableCompoenent";
+import LoadingPage from "../../../components/LoadingPage";
 
 const Student = () => {
   const [students, setStudents] = useState([]);
@@ -32,13 +33,12 @@ const Student = () => {
         setLoading(false);
       }
     };
-
     fetchStudents();
   }, []);
 
   const handleDelete = async (selectedIds) => {
     const token = localStorage.getItem("token");
-  
+
     const confirm = await Swal.fire({
       title: "Apakah Anda yakin?",
       text: "Data yang dihapus tidak dapat dikembalikan!",
@@ -48,21 +48,19 @@ const Student = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Ya, hapus!",
     });
-  
+
     if (!confirm.isConfirmed) return;
-  
+
     let failedDeletes = [];
-  
+
     for (const id of selectedIds) {
       try {
         await axios.delete("http://localhost:8000/api/students/destroy", {
           data: { ids: [id] },
           headers: { Authorization: `Bearer ${token}` },
         });
-  
-        setStudents((prev) =>
-          prev.filter((student) => student.id !== id)
-        );
+
+        setStudents((prev) => prev.filter((student) => student.id !== id));
       } catch (error) {
         console.error(
           `Gagal menghapus student ID ${id}:`,
@@ -72,12 +70,12 @@ const Student = () => {
         break;
       }
     }
-  
+
     if (failedDeletes.length > 0) {
       const failedMessages = failedDeletes
         .map((f) => `ID ${f}: Gagal menghapus karena masih memiliki relasi.`)
         .join("\n");
-  
+
       const forceDelete = await Swal.fire({
         title: "Gagal menghapus!",
         text: `${failedMessages}\nIngin menghapus paksa?`,
@@ -87,7 +85,7 @@ const Student = () => {
         cancelButtonColor: "#3085d6",
         confirmButtonText: "Ya, hapus paksa!",
       });
-  
+
       if (forceDelete.isConfirmed) {
         for (const id of failedDeletes) {
           try {
@@ -102,12 +100,16 @@ const Student = () => {
             console.error("Failed to force delete student:", error);
           }
         }
-        Swal.fire("Terhapus!", "Data student telah dihapus secara paksa.", "success");
+        Swal.fire(
+          "Terhapus!",
+          "Data student telah dihapus secara paksa.",
+          "success"
+        );
       }
     } else {
       Swal.fire("Terhapus!", "Data student telah dihapus.", "success");
     }
-  };  
+  };
 
   const handleEdit = (student) => {
     setModalState({ isOpen: true, mode: "edit", student });
@@ -123,64 +125,6 @@ const Student = () => {
 
   const handleImport = () => {
     setModalState({ isOpen: true, mode: "create-import", student: null });
-  };
-
-  const handleAssignClasses = async () => {
-    const token = localStorage.getItem("token");
-
-    const confirmAssign = await Swal.fire({
-      title: "Are you sure?",
-      text: "The system will automatically assign students to the classes. Are you sure you want to continue?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, assign!",
-      cancelButtonText: "Cancel",
-    });
-
-    if (!confirmAssign.isConfirmed) {
-      return;
-    }
-
-    Swal.fire({
-      title: "Assigning Classes...",
-      text: "This might take a few seconds.",
-      icon: "info",
-      showConfirmButton: false,
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
-    try {
-      const response = await axios.post(
-        "http://localhost:8000/api/assign-classes",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      Swal.close();
-      console.log("Assign Classes Success:", response.data);
-      Swal.fire(
-        "Success!",
-        "Classes have been successfully assigned.",
-        "success"
-      );
-    } catch (error) {
-      Swal.close();
-      console.error("Error assigning classes:", error);
-      Swal.fire(
-        "Error!",
-        "An error occurred while assigning the classes.",
-        "error"
-      );
-    }
   };
 
   const columns = [
@@ -221,28 +165,26 @@ const Student = () => {
       },
     },
   ];
+  if (loading)
+    return (
+      <>
+        <LoadingPage />
+      </>
+    );
 
   return (
-    <div>
-      {loading ? (
-        <p className="text-center text-gray-500">Loading data...</p>
-      ) : error ? (
-        <p className="text-center text-red-500">Error: {error}</p>
-      ) : (
-        <TableComponent
-          data={students}
-          description={`Manage data with filters and sorting Students.`}
-          columns={columns}
-          title="List Of Student"
-          Edit={handleEdit}
-          onEdit={handleEdit}
-          onCreate={handleCreate}
-          onDelete={handleDelete}
-          onImport={handleImport}
-          onAssign={handleAssignClasses}
-        />
-      )}
-
+    <>
+      <TableComponent
+        data={students}
+        description={`Manage data with filters and sorting Students.`}
+        columns={columns}
+        title="List Of Student"
+        Edit={handleEdit}
+        onEdit={handleEdit}
+        onCreate={handleCreate}
+        onDelete={handleDelete}
+        onImport={handleImport}
+      />
       {modalState.isOpen && (
         <Modal
           isOpen={modalState.isOpen}
@@ -258,7 +200,7 @@ const Student = () => {
           )}
         </Modal>
       )}
-    </div>
+    </>
   );
 };
 

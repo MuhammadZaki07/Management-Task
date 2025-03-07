@@ -72,9 +72,14 @@ class AnnouncementController extends Controller
             $users = $request->sent_to['users'];
         } elseif (isset($request->sent_to['class'])) {
             $users = User::whereHas('student', function ($query) use ($request) {
-                $query->whereIn('class_id', $request->sent_to['class']);
+                $query->when($request->sent_to['class'] === 'all', function ($q) {
+                    $q->whereNotNull('class_id');
+                }, function ($q) use ($request) {
+                    $q->whereIn('class_id', (array) $request->sent_to['class']);
+                });
             })->pluck('id');
-        } else {
+        }
+         else {
             $users = [];
         }
 
@@ -84,7 +89,6 @@ class AnnouncementController extends Controller
 
         return response()->json($announcement, 201);
     }
-
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [

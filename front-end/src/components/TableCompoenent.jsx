@@ -7,7 +7,6 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import PropTypes from "prop-types";
-import Swal from "sweetalert2";
 
 const TableComponent = ({
   data,
@@ -18,12 +17,13 @@ const TableComponent = ({
   onEdit,
   onDelete,
   onCreate,
-  onAssign,
+  onPromote,
 }) => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [sortOrder, setSortOrder] = useState("asc");
+  const [selected, setSelected] = useState(0);
 
   const columnsWithCheckbox = [
     {
@@ -36,9 +36,11 @@ const TableComponent = ({
           className="w-5 h-5 appearance-auto border border-slate-300 rounded checked:bg-orange-500 checked:border-white"
           onChange={(e) => {
             const checked = e.target.checked;
-            setSelectedRows(
-              checked ? new Set(data.map((row) => row.id)) : new Set()
-            );
+            const newSelectedRows = checked
+              ? new Set(data.map((row) => row.id))
+              : new Set();
+            setSelectedRows(newSelectedRows);
+            setSelected(newSelectedRows.size);
           }}
           checked={selectedRows.size > 0 && selectedRows.size === data.length}
         />
@@ -58,59 +60,13 @@ const TableComponent = ({
               newSelectedRows.delete(row.original.id);
             }
             setSelectedRows(newSelectedRows);
+            setSelected(newSelectedRows.size);
           }}
         />
       ),
     },
     ...columns,
   ];
-
-  const handleDeleteSelected = async () => {
-    const rowsToDelete = Array.from(selectedRows);
-    if (rowsToDelete.length === 0) {
-      return Swal.fire({
-        title: "Tidak ada data yang dipilih!",
-        icon: "info",
-      });
-    }
-
-    const confirm = await Swal.fire({
-      title: "Apakah Anda yakin?",
-      text: "Data yang dihapus tidak dapat dikembalikan!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Ya, hapus!",
-    });
-
-    if (!confirm.isConfirmed) {
-      return;
-    }
-
-    Swal.fire({
-      title: "Menghapus data...",
-      text: "Proses ini memerlukan waktu beberapa detik.",
-      icon: "info",
-      showConfirmButton: false,
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
-
-    try {
-      await onDelete(rowsToDelete);
-
-      Swal.fire("Terhapus!", "Data telah dihapus.", "success");
-    } catch (error) {
-      console.error("Gagal menghapus data:", error);
-      Swal.fire("Gagal!", "Terjadi kesalahan saat menghapus data.", "error");
-    } finally {
-      Swal.close();
-      setSelectedRows(new Set());
-    }
-  };
 
   const table = useReactTable({
     data,
@@ -131,19 +87,28 @@ const TableComponent = ({
     <div className="px-16 pb-20">
       <div className="flex justify-between items-center py-7">
         <div className="flex flex-col gap-3">
-          <h1 className="font-bold text-4xl text-worn">{title}</h1> 
+          <h1 className="font-bold text-4xl text-worn">{title}</h1>
           <p className="font-normal text-slate-500">{description}</p>
         </div>
       </div>
       <div className="flex justify-between gap-4 mt-8 items-center">
         <div className="flex items-center gap-5">
-          {onAssign && (
+          {onPromote && (
             <button
-              onClick={onAssign}
-              className="bg-green-500 hover:bg-green-400 text-white font-medium rounded-lg py-2 px-5 flex items-center gap-2 cursor-pointer"
+              onClick={() => {
+                const selectedClassIds = [...selectedRows];
+                if (selectedClassIds.length > 0) {
+                  onPromote(selectedClassIds);
+                }
+              }}
+              className={`${
+                selectedRows.size >= 1
+                  ? "hover:bg-sky-100 cursor-pointer"
+                  : "opacity-50 cursor-not-allowed"
+              } bg-sky-500 hover:bg-sky-400 text-white font-medium rounded-lg py-2 px-5 flex items-center gap-2`}
+              disabled={selectedRows.size === 0}
             >
-              Assign Classes
-              <i className="bi bi-share-fill text-white text-lg"></i>
+              <i className="bi bi-building-up text-white text-xl"></i>
             </button>
           )}
           {onImport && (
@@ -220,7 +185,8 @@ const TableComponent = ({
           )}
         </div>
       </div>
-      <table className="min-w-full border-collapse mt-7">
+      <p className="font-light py-5">Data Selected : {selected}</p>
+      <table className="min-w-full border-collapse">
         <thead className="bg-white text-orange-300 font-semibold">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -282,7 +248,7 @@ TableComponent.propTypes = {
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   onCreate: PropTypes.func,
-  onAssign: PropTypes.func,
+  onPromote: PropTypes.func,
 };
 
 export default TableComponent;

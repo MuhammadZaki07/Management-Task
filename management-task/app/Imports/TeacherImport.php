@@ -25,6 +25,7 @@ class TeacherImport implements ToModel, WithHeadingRow
         return new Teacher([
             'user_id' => $user->id,
             'department_id' => $row['department_id'],
+            'lesson_id' => $row['lesson_id']
         ]);
     }
 }

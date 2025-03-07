@@ -5,14 +5,17 @@ import Create from "../Lesson/Create";
 import Edit from "../Lesson/Edit";
 import axios from "axios";
 import TableComponent from "../../../components/TableCompoenent";
+import LoadingPage from "../../../components/LoadingPage";
 
 const Lesson = () => {
   const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
   const [lessons, setLessons] = useState([]);
+  const [loading,setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
   useEffect(() => {
     if (token) {
+      setLoading(true)
       axios
         .get("/api/lessons", {
           headers: {
@@ -21,6 +24,7 @@ const Lesson = () => {
         })
         .then((response) => {
           setLessons(response.data.data);
+          setLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching lessons:", error);
@@ -50,6 +54,7 @@ const Lesson = () => {
       cancelButtonText: "No, keep it",
     }).then((result) => {
       if (result.isConfirmed) {
+        setLoading(true);
         axios
           .delete("/api/lessons/destroy", {
             data: { ids: ids },
@@ -62,6 +67,7 @@ const Lesson = () => {
               prevLessons.filter((lesson) => !ids.includes(lesson.id))
             );
             Swal.fire("Deleted!", "The lessons have been deleted.", "success");
+            setLoading(false)
           })
           .catch((error) => {
             console.error("Error deleting lessons:", error);
@@ -71,7 +77,6 @@ const Lesson = () => {
     });
   };
   
-
   const handleSuccess = () => {
     setModalState({ isOpen: false });
   };
@@ -83,6 +88,12 @@ const Lesson = () => {
   const handleEdit = (lesson) => {
     setModalState({ isOpen: true, mode: "edit", lesson });
   };
+
+  if(loading) { 
+    return ( 
+      <LoadingPage/>
+    )
+  }
 
   return (
     <>

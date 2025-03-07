@@ -90,14 +90,15 @@ const Create = ({ onSuccess, modalState }) => {
             Swal.showLoading();
           },
         });
-      
-        const formData = new FormData();
-        formData.append("file", file);
-      
+
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", file);
+        formDataUpload.append("class_id", formData.class_id);
+        formDataUpload.append("department_id", formData.department_id);
         try {
           await axios.post(
             "http://localhost:8000/api/students/import",
-            formData,
+            formDataUpload,
             {
               headers: {
                 "Content-Type": "multipart/form-data",
@@ -105,17 +106,20 @@ const Create = ({ onSuccess, modalState }) => {
               },
             }
           );
-      
+
           Swal.fire("Sukses!", "Data telah berhasil diimpor.", "success");
           onSuccess();
         } catch (error) {
           console.error("Gagal mengimpor data:", error);
-          Swal.fire("Gagal!", "Terjadi kesalahan saat mengimpor data.", "error");
+          Swal.fire(
+            "Gagal!",
+            "Terjadi kesalahan saat mengimpor data.",
+            "error"
+          );
         } finally {
           Swal.close();
         }
       }
-      
     } catch (error) {
       if (error.response && error.response.data.errors) {
         setErrors(error.response.data.errors);
@@ -124,7 +128,7 @@ const Create = ({ onSuccess, modalState }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 py-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 py-5 w-full">
       {modalState.mode === "create" ? (
         <>
           <div className="grid grid-cols-2 gap-5">
@@ -302,23 +306,65 @@ const Create = ({ onSuccess, modalState }) => {
           </div>
         </>
       ) : (
-        <div className="px-5">
-          <label className="font-medium">Import File:</label>
-          <input
-            type="file"
-            name="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="w-full py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5]/[0.5] focus:outline-none"
-          />
-          {errors.file && (
-            <p className="text-red-500 text-sm">{errors.file[0]}</p>
-          )}
-        </div>
+        <>
+          <div>
+            <label className="font-medium">Pilih Kelas:</label>
+            <select
+              name="class_id"
+              className="w-full py-2 px-4 rounded-lg text-sm font-light border border-orange-500"
+              value={formData.class_id}
+              onChange={handleChange}
+            >
+              <option value="">Pilih Kelas</option>
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.class_name}
+                </option>
+              ))}
+            </select>
+            {errors.class_id && (
+              <p className="text-red-500 text-sm">{errors.class_id[0]}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="font-medium">Pilih Jurusan:</label>
+            <select
+              name="department_id"
+              className="w-full py-2 px-4 rounded-lg text-sm font-light border border-orange-500"
+              value={formData.department_id}
+              onChange={handleChange}
+            >
+              <option value="">Pilih Jurusan</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.department_name}
+                </option>
+              ))}
+            </select>
+            {errors.department_id && (
+              <p className="text-red-500 text-sm">{errors.department_id[0]}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="font-medium">Import File:</label>
+            <input
+              type="file"
+              name="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="w-full py-2 px-4 rounded-lg text-sm font-light border border-orange-500"
+            />
+            {errors.file && (
+              <p className="text-red-500 text-sm">{errors.file[0]}</p>
+            )}
+          </div>
+        </>
       )}
       <button
         type="submit"
-        className="bg-orange-400 text-white py-2 px-4 rounded-lg"
+        className="bg-orange-400 text-white py-2 px-4 rounded-lg cursor-pointer"
       >
         Create Student
       </button>
@@ -329,7 +375,7 @@ const Create = ({ onSuccess, modalState }) => {
 Create.propTypes = {
   onSuccess: PropTypes.func.isRequired,
   modalState: PropTypes.shape({
-  mode: PropTypes.oneOf(["create", "create-import"]).isRequired,
+    mode: PropTypes.oneOf(["create", "create-import"]).isRequired,
   }).isRequired,
 };
 
