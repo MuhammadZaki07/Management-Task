@@ -31,11 +31,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('teachers', TeacherController::class);
     Route::resource('classes', ClassroomController::class);
     Route::resource('students', StudentController::class);
+    Route::resource('lessons', LessonController::class);
+    Route::get('/download', [TaskController::class, 'download']);
+    Route::resource('task-grading', TaskGradeController::class);
+    Route::resource('tasks', TaskController::class);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::resource('departments', DepartementController::class);
-    Route::resource('lessons', LessonController::class);
     Route::post('/register', [AuthController::class, 'registration']);
     Route::delete('/admins/destroy', [AuthController::class, 'destroy']);
     Route::put('/adminsUpdate/{id}', [AuthController::class, 'updateAdmin']);
@@ -55,19 +58,19 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'role:teacher'])->group(function () {
-    Route::resource('tasks', TaskController::class);
-    Route::resource('task-grading', TaskGradeController::class);
     Route::post('/submissions/{submissionId}/review-revision', [TaskSubmissionController::class, 'reviewRevision']);
     Route::get('tasks/teacher/chart', [TaskController::class, 'getTaskChartData']);
     Route::get('/teacher', [TeacherController::class, 'profile']);
+    Route::get('/task-submissions/filter', [TaskSubmissionController::class, 'filter']);
 });
 
 Route::middleware(['auth:sanctum', 'role:student'])->group(function () {
     Route::resource('task-submissions', TaskSubmissionController::class)->only(['store', 'update', 'show', 'destroy']);
+    Route::post('task-submissions', [TaskSubmissionController::class, 'store']);
     Route::post('/submissions/{submissionId}/request-revision', [TaskSubmissionController::class, 'requestRevision']);
     Route::get('/completed-tasks', [TaskSubmissionController::class, 'getComplateTask']);
     Route::get('/profile', [StudentController::class, 'profile']);
+    Route::get('/student-id', [StudentController::class, 'getStudentId']);
     Route::get('/tasks-student/scores', [StudentController::class, 'getTasksByScore']);
 });
-
 

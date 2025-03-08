@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\HistoryHelper;
+use App\Models\TaskAssignment;
 use App\Models\TaskGrade;
 use Illuminate\Http\Request;
 use App\Models\TaskSubmission;
@@ -16,7 +17,23 @@ class TaskGradeController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+
+        $tasks = TaskAssignment::with(['task', 'task.lesson', 'task.teacher.user', 'class','submissions.grading'])
+            ->where(function ($query) use ($user) {
+                $query->where('target_type', 'class')
+                    ->where('class_id', $user->student->class_id);
+            })
+            ->orWhere(function ($query) use ($user) {
+                $query->where('target_type', 'individual')
+                    ->where('student_id', $user->student->id);
+            })
+            ->orWhere(function ($query) {
+                $query->where('target_type', 'all_students');
+            })
+            ->get();
+
+        return response()->json($tasks);
     }
 
     /**
@@ -82,10 +99,23 @@ class TaskGradeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($taskAssignmentId, $studentId)
     {
-        //
+        // Cari task submission berdasarkan task_assignment_id dan student_id
+        $submission = TaskSubmission::where('task_assignment_id', $taskAssignmentId)
+                                    ->where('student_id', $studentId)
+                                    ->first();
+
+        if (!$submission) {
+            return response()->json(['message' => 'Task submission not found'], 404);
+        }
+
+        // Ambil task grade berdasarkan task_submission_id
+        $grade = TaskGrade::where('task_submission_id', $submission->id)->first();
+
+        return response()->json(['grade' => $grade], 200);
     }
+
 
     /**
      * Show the form for editing the specified resource.

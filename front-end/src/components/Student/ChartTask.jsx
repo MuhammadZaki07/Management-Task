@@ -47,24 +47,31 @@ const ChartTask = () => {
       },
     },
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/completed-tasks",{
-          headers : {
-            Authorization : `Bearer ${localStorage.getItem("token")}`
+        setLoading(true);
+        const response = await axios.get(
+          "http://localhost:8000/api/completed-tasks",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
-        });
+        );
         const taskData = response.data;
-        
-        const categories = taskData.map(task => task.date);
-        const seriesData = [{
-          name: "Completed Tasks",
-          data: taskData.map(task => task.count),
-        }];
 
-        setState(prevState => ({
+        const categories = taskData.map((task) => task.date);
+        const seriesData = [
+          {
+            name: "Completed Tasks",
+            data: taskData.map((task) => task.count),
+          },
+        ];
+
+        setState((prevState) => ({
           ...prevState,
           series: seriesData,
           options: {
@@ -74,11 +81,21 @@ const ChartTask = () => {
         }));
       } catch (error) {
         console.error("Error fetching task data", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-100 w-full rounded-xl p-10 space-y-5 flex-[3] animate-pulse">
+        <div className="bg-slate-400 w-1/2 h-5 rounded-xl"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f5f2f0] w-full rounded-xl p-10 space-y-5 flex-[3]">

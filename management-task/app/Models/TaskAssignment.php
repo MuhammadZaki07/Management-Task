@@ -20,4 +20,8 @@ class TaskAssignment extends Model
     {
         return $this->belongsTo(Student::class, 'student_id');
     }
+    public function submissions()
+    {
+        return $this->hasMany(TaskSubmission::class, 'task_assignment_id');
+    }
 }

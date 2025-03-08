@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('task_assignment_id')->constrained('task_assignments')->onDelete('cascade');
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->text('submission_text')->nullable();
-            $table->string('submission_file')->nullable();
+            $table->json('submission_file')->nullable();
             $table->enum('status', ['pending', 'graded', 'revision'])->default('pending');
             $table->timestamps();
         });

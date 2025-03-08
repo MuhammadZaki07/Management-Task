@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\HistoryHelper;
+use App\Models\TaskAssignment;
 use Illuminate\Http\Request;
 use App\Models\TaskSubmission;
 use App\Helpers\NotificationHelper;
@@ -30,59 +31,52 @@ class TaskSubmissionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // In your Laravel backend controller method
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'task_assignment_id' => 'required|exists:task_assignments,id',
-            'submission_text' => 'nullable|string',
-            'submission_file' => 'nullable|string',
+        $request->validate([
+            'task_file' => 'required|mimes:pdf|max:10240',
+            'task_id' => 'required|exists:tasks,id',
+            'student_id' => 'nullable|exists:students,id',
+            'class_id' => 'nullable|exists:classes,id',
         ]);
 
-        $studentId = Auth::user()->student->id;
-
-        $existingSubmission = TaskSubmission::where([
-            'task_assignment_id' => $validated['task_assignment_id'],
-            'student_id' => $studentId,
-        ])->first();
-
-        if ($existingSubmission) {
-            if ($existingSubmission->status === 'revision rejected') {
-                return response()->json([
-                    'message' => 'Permintaan revisi ditolak, Anda tidak bisa mengirim ulang tugas ini!'
-                ], 403);
-            }
-
-            return response()->json([
-                'message' => 'Anda sudah mengumpulkan tugas ini!',
-                'submission' => $existingSubmission
-            ], 400);
+        if (!$request->student_id && !$request->class_id) {
+            return response()->json(['error' => 'Either student_id or class_id must be provided'], 422);
         }
 
+        $taskAssignment = TaskAssignment::where('task_id', $request->task_id)
+            ->where(function ($query) use ($request) {
+                if ($request->student_id) {
+                    $query->where('student_id', $request->student_id);
+                }
+                if ($request->class_id) {
+                    $query->where('class_id', $request->class_id);
+                }
+            })
+            ->first();
+
+        if (!$taskAssignment) {
+            return response()->json(['error' => 'Task assignment not found'], 404);
+        }
+
+        $taskAssignmentId = $taskAssignment->id;
+
+        $file = $request->file('task_file');
+        $path = $file->store('task_submissions', 'public');
+
         $submission = TaskSubmission::create([
-            'task_assignment_id' => $validated['task_assignment_id'],
-            'student_id' => $studentId,
-            'submission_text' => $validated['submission_text'] ?? null,
-            'submission_file' => $validated['submission_file'] ?? null,
+            'task_assignment_id' => $taskAssignmentId,
+            'student_id' => $request->student_id ?? null,
+            'class_id' => $request->class_id ?? null,
+            'submission_file' => $path,
+            'submission_text' => $request->submission_text ?? '',
             'status' => 'pending',
         ]);
 
-        HistoryHelper::log(
-            $studentId,
-            'tugas_dikumpulkan',
-            "Murid " . Auth::user()->name . " telah mengumpulkan tugas '{$submission->taskAssignment->task->title}'."
-        );
-
-        NotificationHelper::send(
-            $submission->taskAssignment->teacher_id,
-            'submission_received',
-            'Murid ' . Auth::user()->name . ' telah mengumpulkan tugas.'
-        );
-
-        return response()->json([
-            'message' => 'Tugas berhasil dikumpulkan!',
-            'submission' => $submission
-        ], 201);
+        return response()->json($submission, 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -278,4 +272,18 @@ class TaskSubmissionController extends Controller
         return response()->json($completedTasks);
     }
 
+    public function filter(Request $request)
+    {
+        $task_id = (int) $request->task_id;
+        $status = (string) $request->status;
+
+        $submissions = TaskSubmission::whereHas('taskAssignment', function ($query) use ($task_id) {
+            $query->where('task_id', $task_id);
+        })
+            ->where('status', $status)
+            ->with(['student.user', 'student.class', 'student.department'])
+            ->get();
+
+        return response()->json($submissions);
+    }
 }

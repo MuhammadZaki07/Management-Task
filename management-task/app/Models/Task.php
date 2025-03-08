@@ -15,7 +15,14 @@ class Task extends Model
     ];
     public function submissions()
     {
-        return $this->hasMany(TaskSubmission::class, 'task_id', 'id');
+        return $this->hasManyThrough(
+            TaskSubmission::class,
+            TaskAssignment::class,
+            'task_id',
+            'task_assignment_id',
+            'id',
+            'id'
+        );
     }
 
 
@@ -28,14 +35,16 @@ class Task extends Model
     {
         return $this->hasManyThrough(Classes::class, TaskAssignment::class, 'task_id', 'id', 'id', 'class_id');
     }
+    public function task_submissions()
+    {
+        return $this->hasMany(TaskSubmission::class, 'task_assignment_id', 'id');
+    }
 
 
     public function teacher()
     {
         return $this->belongsTo(Teacher::class, 'teacher_id');
     }
-
-
 
     public function lesson()
     {

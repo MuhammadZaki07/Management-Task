@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -7,8 +7,8 @@ import Swal from "sweetalert2";
 const Navbar = () => {
   const { setToken, setUser, token, user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
   const [hasUnread, setHasUnread] = useState(false);
+  const [time, setTime] = useState(new Date());
 
   const handleLogout = async () => {
     Swal.fire({
@@ -47,11 +47,6 @@ const Navbar = () => {
       }
     });
   };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
@@ -70,13 +65,24 @@ const Navbar = () => {
     }
   };
 
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formattedTime = `${time.getSeconds()} : ${time.getMinutes()} : ${time.getHours()} | ${time.toLocaleDateString(
+    "en-US",
+    { weekday: "long", month: "long", year: "numeric" }
+  )}`;
+
   return (
     <div className="w-full py-7 items-center flex gap-15 justify-between px-16 border-b border-[#5b6087]/[0.1]">
       <div className="flex items-center gap-10">
-        <h1 className="text-[#5b6087] font-medium text-xl">
-          Dashboard{" "}
-          {location.pathname === "/dashboard" ? "" : location.pathname}
-        </h1>
+        <h1 className="text-[#5b6087] font-medium text-xl">{formattedTime}</h1>
       </div>
       <div className="flex gap-15">
         {user.role === "admin" && (
@@ -91,9 +97,11 @@ const Navbar = () => {
         )}
         <Link
           to={`${
-            user.role !== "admin"
+            user.role === "admin"
+              ? "/admin-layout/notification"
+              : user.role === "teacher"
               ? "/teacher-layout/notification"
-              : "/admin-layout/notification"
+              : "/student-layout/notification"
           }`}
           className="relative"
         >

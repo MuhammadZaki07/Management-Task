@@ -12,6 +12,8 @@ use App\Helpers\NotificationHelper;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
@@ -23,7 +25,15 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        return response()->json($task->load('assignments', 'submissions'));
+        $task->load([
+            'teacher.user',
+            'teacher.department',
+            'assignments.submissions.student.user',
+            'assignments.submissions.student.department',
+            'submissions'
+        ]);
+
+        return response()->json($task);
     }
 
     public function store(Request $request)
@@ -148,8 +158,6 @@ class TaskController extends Controller
         return response()->json(['message' => 'Task deleted successfully']);
     }
 
-
-
     public function getTaskChartData()
     {
         $user = Auth::user();
@@ -168,5 +176,28 @@ class TaskController extends Controller
         });
 
         return response()->json($formattedData);
+    }
+
+    public function download(Request $request)
+    {
+        $filePath = $request->query('file');
+        Log::info("Requested file path: " . $filePath);
+
+        if (!$filePath) {
+            return response()->json(['error' => 'No file specified'], 400);
+        }
+
+        $fullPath = public_path("storage/" . $filePath);
+        Log::info("Full path resolved: " . $fullPath);
+
+        if (!file_exists($fullPath)) {
+            return response()->json(['error' => 'File not found'], 404);
+        }
+
+        $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+        $isMedia = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov']);
+        $newFileName = $isMedia ? "media_TMS.$extension" : "document_TMS.$extension";
+
+        return response()->download($fullPath, $newFileName);
     }
 }

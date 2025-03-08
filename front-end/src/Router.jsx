@@ -23,6 +23,7 @@ import DashboardTeacher from "./pages/Teacher/Dashboard";
 import Task from "./pages/Teacher/Task/Task";
 import Detailtask from "./pages/Teacher/Task/Detailtask";
 import Notification from "./pages/Teacher/Notification";
+import NotificationUser from "./pages/Student/Notifcation";
 import NotificationAdmin from "./pages/Admin/message/Notifcation";
 import DetailTask from "./pages/Student/DetailTask";
 import Admin from "./pages/Admin/user/Admin";
@@ -95,8 +96,12 @@ export const router = createBrowserRouter([
         element: <TaskStudent />,
       },      
       {
-        path: "detail-task",
+        path: "detail-task/:id",
         element: <DetailTask />,
+      },      
+      {
+        path: "notification",
+        element: <NotificationUser />,
       },      
     ],
   },

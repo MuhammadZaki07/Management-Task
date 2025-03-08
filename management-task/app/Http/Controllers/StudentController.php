@@ -48,8 +48,23 @@ class StudentController extends Controller
             ],
             'department' => $student->department->department_name ?? null,
         ]);
-
     }
+
+    public function getStudentId()
+    {
+        $user = Auth::user();
+        $student = Student::where('user_id', $user->id)->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Profil siswa tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'student_id' => $student->id, 
+        ]);
+    }
+
+
     public function index()
     {
         $students = Student::with(['user', 'department', 'class'])->get();
@@ -459,8 +474,8 @@ class StudentController extends Controller
         $message = $type === 'below' ? 'Tasks with scores below KKM' : 'Tasks with scores above KKM';
 
         $tasks = TaskGrade::whereHas('taskSubmission', function ($query) use ($user) {
-                $query->where('student_id', $user->id);
-            })
+            $query->where('student_id', $user->id);
+        })
             ->where('score', $operator, 75)
             ->get();
 
@@ -470,5 +485,4 @@ class StudentController extends Controller
             'data' => $tasks
         ]);
     }
-
 }

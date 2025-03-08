@@ -1,56 +1,43 @@
-import { useState } from "react";
-import Modal from "../../components/Modal";
-import Create from "../Admin/Teacher/Create";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Task = () => {
-  const [modalState, setModalState] = useState({ isOpen: false, mode: "" });
-  const tasks = [
-    {
-      id: 1,
-      name: "Project Website",
-      class: "11-RPL-A",
-      date: "10-02-2025",
-      lesson: "Web Development",
-      teacher: "Mr. Smith",
-      documents: 3,
-      deadline: "12-02-2025 - 15-02-2025",
-      status:"active"
-    },
-    {
-      id: 2,
-      name: "Network Setup",
-      class: "10-TKJ-B",
-      date: "12-02-2025",
-      lesson: "Networking",
-      teacher: "Ms. Johnson",
-      documents: 2,
-      deadline: "14-02-2025 - 17-02-2025",
-      status:"active"
-    },
-    {
-      id: 3,
-      name: "3D Animation",
-      class: "12-Animasi-C",
-      date: "15-02-2025",
-      lesson: "Animation",
-      teacher: "Mr. Anderson",
-      documents: 4,
-      deadline: "17-02-2025 - 20-02-2025",
-      status:"non-active"
-    },
-    {
-      id: 4,
-      name: "Car Engine Analysis",
-      class: "11-Otomotif-A",
-      date: "18-02-2025",
-      lesson: "Mechanical Engineering",
-      teacher: "Mr. Brown",
-      documents: 1,
-      deadline: "20-02-2025 - 23-02-2025",
-      status:"non-active"
-    },
-  ];
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/task-grading", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setTasks(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching tasks:", error);
+        setLoading(false);
+      });
+  }, [token]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return date.toLocaleDateString("en-US", options);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="px-16">
@@ -69,52 +56,69 @@ const Task = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-5 w-full py-10">
-        {tasks.map((task) => (
-          <Link
-            to={`/student-layout/detail-task`}
-            key={task.id}
-            className={`bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer ${task.status !== "active" ? "opacity-50" : ""}`}
-          >
-            <h1 className="font-semibold text-2xl text-slate-800">
-              {task.name}
-            </h1>
-            <p className="text-slate-500 text-xs font-normal mt-2">
-              {task.class} | {task.date}
-            </p>
-            <p className="text-slate-500 text-sm font-normal mt-2">
-              Lesson: {task.lesson} | {task.teacher}
-            </p>
-            <div className={`py-3 mb-3 ${task.status !== "active" ? "bg-none" : "flex gap-5 items-center"}`}>
-              <div className={`w-3 h-3 rounded-full ${task.status !== "active" ? "bg-none" : "animate-ping bg-red-600"}`}></div>
-              <p className="text-slate-500 text-xs font-normal">
-                Deadline : {task.deadline}
+      <div className="grid grid-cols-4 gap-5 w-full">
+        {tasks.map((taskData) => {
+          const task = taskData.task;
+          const taskClass = taskData.class;
+          const isDeadlinePassed = new Date(task.due_date) < new Date();
+          const timeRemaining = new Date(task.due_date) - new Date();
+          const hoursRemaining = timeRemaining / 1000 / 60 / 60;
+          const deadlineColor =
+            hoursRemaining <= 5
+              ? "bg-red-600 animate-ping"
+              : "bg-green-600 animate-bounce";
+
+          <div
+            className={`w-3 h-3 rounded-full ${
+              isDeadlinePassed ? "bg-none" : `${deadlineColor} animate-ping`
+            }`}
+          ></div>;
+
+          return (
+            <Link
+              to={`/student-layout/detail-task/${task.id}`}
+              key={task.id}
+              className={`bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer ${
+                isDeadlinePassed ? "opacity-50" : ""
+              }`}
+            >
+              <h1 className="font-semibold text-2xl text-slate-800">
+                {task.title}
+              </h1>
+              <p className="text-slate-500 text-xs font-normal mt-2">
+                {taskClass.class_name} | {formatDate(task.created_at)}
               </p>
-            </div>
-            <div className="flex gap-5">
-              <div className="flex gap-3 text-slate-500 text-sm">
-                <i className="bi bi-file-earmark-text-fill"></i>
-                <p>
-                  {task.documents < 1
-                    ? "tidak ada document"
-                    : task.documents + " Document"}
-                  {task.documents > 1 ? "s" : ""}
+              <p className="text-slate-500 text-sm font-normal mt-2">
+                {task.lesson.name} | {task.teacher.user.name}
+              </p>
+              <div
+                className={`py-3 mb-3 ${
+                  isDeadlinePassed ? "bg-none" : "flex gap-5 items-center"
+                }`}
+              >
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isDeadlinePassed ? "bg-none" : `${deadlineColor}`
+                  }`}
+                ></div>
+                <p className="text-slate-500 text-xs font-normal">
+                  Deadline : {formatDate(task.due_date)}
                 </p>
               </div>
-            </div>
-          </Link>
-        ))}
+              <div className="flex gap-5">
+                <div className="flex gap-3 text-slate-500 text-sm">
+                  <i className="bi bi-file-earmark-text-fill"></i>
+                  <p>
+                    {task.files && JSON.parse(task.files).length > 0
+                      ? `${JSON.parse(task.files).length} Dokumen`
+                      : "Tidak ada dokumen"}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
-
-      {modalState.isOpen && (
-        <Modal
-          isOpen={modalState.isOpen}
-          setOpen={setModalState}
-          mode={modalState.mode}
-        >
-          {modalState.isOpen && <Create />}
-        </Modal>
-      )}
     </div>
   );
 };
