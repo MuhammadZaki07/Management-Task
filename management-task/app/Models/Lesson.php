@@ -16,9 +16,13 @@ class Lesson extends Model
         return $this->belongsToMany(Department::class, 'department_lesson');
     }
 
-    public function tasks()
+    public function department()
     {
-        return $this->hasMany(Task::class);
+        return $this->belongsTo(Department::class, 'department_id');
     }
-    
+
+    public function class()
+    {
+        return $this->belongsTo(Classes::class);
+    }
 }

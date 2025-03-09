@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('type', [
                 'task_graded', 'revision_approved', 'revision_rejected',
-                'new_task', 'new_announcement', 'submission_received',
+                'new_task', 'new_announcement', 'submission_received','submission_reviewed',
                 'revision_requested', 'system_alert','task_deleted','message','task_reminder','teacher_deleted','assigned_as_homeroom','homeroom_removed'
             ]);
             $table->text('message');

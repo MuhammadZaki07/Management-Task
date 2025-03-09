@@ -7,14 +7,15 @@ import Swal from "sweetalert2";
 const DetailTask = () => {
   const { id } = useParams();
   const [task, setTask] = useState(null);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchTask = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/tasks/${id}`,
+          `http://localhost:8000/api/assignments/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -38,19 +39,20 @@ useEffect(() => {
     fetchTask();
   }, [id]);
 
-  if (loading) return <div>Loading task...</div>;
-  if (error) return <div>{error}</div>;
-  if (!task) return <div>Task not found</div>;
+  // Parsing files hanya dilakukan jika task ada
+  useEffect(() => {
+    if (!task) return;
 
-  let documents = [];
-  try {
-    documents = task.files ? JSON.parse(task.files) : [];
-  } catch (error) {
-    setError("Error parsing task files.");
-    console.error("Error parsing task files:", error);
-  }
+    try {
+      setDocuments(task.files ? JSON.parse(task.files) : []);
+    } catch (error) {
+      console.error("Error parsing task files:", error);
+      setDocuments([]); // Pastikan dokumen tetap array kosong jika gagal parsing
+    }
+  }, [task]);
 
   const handleDownload = async (filePath) => {
+    const correctPath = filePath.replace("tasks/", "");
     Swal.fire({
       title: "Are you sure?",
       text: "Do you want to download this file?",
@@ -64,7 +66,7 @@ useEffect(() => {
         try {
           const response = await fetch(
             `http://localhost:8000/api/download?file=${encodeURIComponent(
-              filePath
+              correctPath
             )}`,
             {
               headers: {
@@ -106,6 +108,10 @@ useEffect(() => {
     });
   };
 
+  if (loading) return <div>Loading task...</div>;
+  if (error) return <div>{error}</div>;
+  if (!task) return <div>Task not found</div>;
+
   return (
     <div className="px-16 py-10 w-full">
       <div className="flex flex-col gap-2 border-b-2 border-slate-300/[0.5]">
@@ -114,37 +120,52 @@ useEffect(() => {
             <i className="bi bi-list-check text-3xl text-white"></i>
           </div>
           <h1 className="text-4xl font-semibold">
-            {task.title} | {task.teacher.department.department_name}
+            {task.title} | {task.lesson?.name || "No Subject"}
           </h1>
         </div>
         <p className="text-slate-500 text-sm font-normal mt-2">
           Teacher: {task.teacher?.user?.name ?? "Unknown"} |{" "}
-          {new Date(task.created_at).toLocaleDateString()}
+          {new Date(task.created_at).toLocaleDateString("en-US", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
         </p>
+
         <div className="py-3 mb-3">
-          <div className="text-slate-500 text-xs font-normal flex items-center gap-3">
-            {task.due_date ? (
-              <>
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    new Date(task.due_date) - new Date() <= 10 * 60 * 60 * 1000
-                      ? "bg-red-600 animate-ping"
-                      : "bg-green-500 animate-bounce"
-                  }`}
-                ></div>
+          {task.status === "non-active" ? (
+            <p className="text-red-600 text-xs font-semibold">
+              Status: Non-Active
+            </p>
+          ) : (
+            <div className="text-slate-500 text-xs font-normal flex items-center gap-3">
+              {task.deadline ? (
+                <>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      new Date(task.deadline) - new Date() <=
+                      10 * 60 * 60 * 1000
+                        ? "bg-red-600 animate-ping"
+                        : "bg-green-500 animate-bounce"
+                    }`}
+                  ></div>
+                  <p className="text-slate-500 text-xs font-normal">
+                    {new Date(task.deadline).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                </>
+              ) : (
                 <p className="text-slate-500 text-xs font-normal">
-                  {new Date(task.due_date).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  No Deadline
                 </p>
-              </>
-            ) : (
-              <p className="text-slate-500 text-xs font-normal">No Deadline</p>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -161,7 +182,8 @@ useEffect(() => {
             {documents.map((doc, index) => {
               const filePath = doc.startsWith("tasks/") ? doc : `tasks/${doc}`;
               const fileExtension = filePath.split(".").pop().toLowerCase();
-              const isMedia = [
+
+              const mediaExtensions = [
                 "jpg",
                 "jpeg",
                 "png",
@@ -169,8 +191,11 @@ useEffect(() => {
                 "mp4",
                 "mov",
                 "avi",
-              ].includes(fileExtension);
-              const displayName = isMedia ? "Media File" : "Document File";
+              ];
+              const isMedia = mediaExtensions.includes(fileExtension);
+              const displayName = isMedia
+                ? `Media File ${index + 1}`
+                : `Document File ${index + 1}`;
 
               return (
                 <div

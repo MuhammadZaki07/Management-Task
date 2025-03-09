@@ -38,13 +38,4 @@ class Teacher extends Model
         return $this->hasMany(Classes::class, 'homeroom_teacher_id');
     }
 
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'teacher_id');
-    }
-
-    public function taskGrades(): HasMany
-    {
-        return $this->hasMany(TaskGrade::class, 'teacher_id');
-    }
 }

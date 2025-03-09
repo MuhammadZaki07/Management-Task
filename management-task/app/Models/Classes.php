@@ -37,10 +37,6 @@ class Classes extends Model
         return $this->hasMany(Announcement::class, 'class_id');
     }
 
-    public function taskAssignments()
-    {
-        return $this->hasMany(TaskAssignment::class, 'class_id');
-    }
 
     public function academicYear()
     {

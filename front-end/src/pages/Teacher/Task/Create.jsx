@@ -83,8 +83,7 @@ const Create = ({ onSuccess }) => {
   
     let validationErrors = {};
     if (!taskName.trim()) validationErrors.taskName = "Task name is required";
-    if (!taskDescription.trim())
-      validationErrors.taskDescription = "Task description is required";
+    if (!taskDescription.trim()) validationErrors.taskDescription = "Task description is required";
     if (!lessonId) validationErrors.lessonId = "Lesson is required";
     if (isDeadlineEnabled && (!startDeadline || !endDeadline)) {
       validationErrors.deadline = "Start and end deadline are required";
@@ -100,17 +99,18 @@ const Create = ({ onSuccess }) => {
     formData.append("title", taskName);
     formData.append("description", taskDescription);
   
-    // Hanya kirim due_date jika deadline aktif
     if (isDeadlineEnabled && endDeadline) {
       const formattedEndDeadline = `${endDeadline} 23:59:59`;
-      formData.append("due_date", formattedEndDeadline);
+      formData.append("deadline", formattedEndDeadline);
     }
   
-    if (sentTo === "class") {
+    if (sentTo === "class" || sentTo === "all") {
       selectedMultiClasses.forEach((cls) =>
         formData.append("assign_to_classes[]", cls.value)
       );
-    } else if (sentTo === "individual" && selectedSingleClass) {
+    }
+  
+    if (sentTo === "individual" || sentTo === "all") {
       selectedStudents.forEach((student) =>
         formData.append("assign_to_students[]", student.value)
       );
@@ -123,7 +123,7 @@ const Create = ({ onSuccess }) => {
     }
   
     try {
-      await axios.post("http://localhost:8000/api/tasks", formData, {
+      await axios.post("http://localhost:8000/api/assignments", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -148,7 +148,7 @@ const Create = ({ onSuccess }) => {
     }
   };
   
-
+  
   return (
     <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-2 gap-5">
@@ -156,7 +156,7 @@ const Create = ({ onSuccess }) => {
           <label className="font-medium text-slate-700">Task Name</label>
           <input
             type="text"
-            className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
+            className="w-full bg-white py-2 px-4 rounded-lg border border-slate-300 focus:outline-none"
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
           />
@@ -169,7 +169,7 @@ const Create = ({ onSuccess }) => {
           <input
             type="file"
             multiple
-            className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
+            className="w-full bg-white py-2 px-4 rounded-lg border border-slate-300 focus:outline-none"
             onChange={handleFileChange}
           />
         </div>
@@ -177,7 +177,7 @@ const Create = ({ onSuccess }) => {
 
       <div>
         <textarea
-          className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
+          className="w-full bg-white py-2 px-4 rounded-lg border border-slate-300 focus:outline-none"
           placeholder="Task Description"
           value={taskDescription}
           onChange={(e) => setTaskDescription(e.target.value)}
@@ -190,19 +190,18 @@ const Create = ({ onSuccess }) => {
       <div>
         <label className="font-medium text-slate-700">Send To</label>
         <select
-          className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
+          className="w-full bg-white py-2 px-4 rounded-lg border border-slate-300 focus:outline-none"
           value={sentTo}
           onChange={(e) => setSentTo(e.target.value)}
         >
-          <option value="all">Semua</option>
-          <option value="class">Kelas Tertentu</option>
-          <option value="individual">Individu</option>
+          <option value="class">Classes</option>
+          <option value="individual">Individual Student</option>
         </select>
       </div>
 
       {sentTo === "class" && (
         <div className="col-span-2">
-          <label className="font-medium text-slate-700">Pilih Kelas</label>
+          <label className="font-medium text-slate-700">Select Class</label>
           <Select
             isMulti
             options={classes}
@@ -213,14 +212,14 @@ const Create = ({ onSuccess }) => {
 
       {sentTo === "individual" && (
         <div className="col-span-2">
-          <label className="font-medium text-slate-700">Pilih Kelas</label>
+          <label className="font-medium text-slate-700">Select Class</label>
           <Select options={classes} onChange={setSelectedSingleClass} />
         </div>
       )}
 
       {sentTo === "individual" && selectedSingleClass && (
         <div className="col-span-2">
-          <label className="font-medium text-slate-700">Pilih Murid</label>
+          <label className="font-medium text-slate-700">Select Student</label>
           <Select isMulti options={students} onChange={setSelectedStudents} />
         </div>
       )}

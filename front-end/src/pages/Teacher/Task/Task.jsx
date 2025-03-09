@@ -17,9 +17,12 @@ const Task = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/tasks", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const response = await axios.get(
+        "http://localhost:8000/api/assignments",
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -27,11 +30,9 @@ const Task = () => {
       setLoading(false);
     }
   };
-
   const handleCreate = () => {
     setModalState({ isOpen: true, mode: "create" });
   };
-
   const handleSuccess = () => {
     setModalState({ isOpen: false, mode: "" });
     fetchTasks();
@@ -55,7 +56,7 @@ const Task = () => {
       if (result.isConfirmed) {
         try {
           const response = await axios.delete(
-            `http://localhost:8000/api/tasks/${taskId}`,
+            `http://localhost:8000/api/assignments/${taskId}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -117,12 +118,95 @@ const Task = () => {
               <Link
                 to={`/teacher-layout/detail-task/${task.id}`}
                 key={task.id}
-                className="bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer"
+                className={`${task.status === "non-active" ? "opacity-50" : "opacity-100"} bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer`}
               >
                 <div className="flex gap-3 items-center">
                   <h1 className="font-semibold text-2xl text-slate-800">
                     {task.title}
                   </h1>
+                </div>
+                <div className="text-slate-500 text-xs font-normal mt-2 flex gap-1">
+                  <div>
+                    {task.assigned_classes.length > 0
+                      ? task.assigned_classes
+                          .map((cls) => cls.class_name)
+                          .join(", ")
+                      : task.assignments.length > 0
+                      ? "Individu"
+                      : "Semua murid"}
+                  </div>
+                  <div>
+                    |{" "}
+                    {new Date(task.created_at).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+
+                <p className="text-slate-500 text-sm font-normal mt-2">
+                  {task.lesson.name} | {task.teacher.user.name}
+                </p>
+                <div className="flex gap-5 items-center py-3 mb-3">
+                  {task.deadline ? (
+                    <>
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          task.status === "non-active"
+                            ? "bg-red-500"
+                            : new Date(task.deadline) < new Date()
+                            ? "bg-red-600 animate-ping"
+                            : new Date(task.deadline) - new Date() <=
+                              24 * 60 * 60 * 1000
+                            ? "bg-red-600 animate-ping"
+                            : new Date(task.deadline) - new Date() <=
+                              3 * 24 * 60 * 60 * 1000
+                            ? "bg-yellow-500 animate-pulse"
+                            : "bg-green-500 animate-bounce"
+                        }`}
+                      ></div>
+
+                      <p className="text-slate-500 text-xs font-normal">
+                        {task.status === "non-active" ? (
+                          <span className="text-red-500 font-semibold">
+                            Status: Non-Active
+                          </span>
+                        ) : (
+                          <>
+                            Deadline:{" "}
+                            {new Date(task.deadline).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              }
+                            )}
+                          </>
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-slate-500 text-xs font-normal">
+                      No Deadline
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-5 items-center">
+                  <div className="flex gap-3 text-slate-500 text-sm">
+                    <i className="bi bi-file-earmark-text-fill"></i>
+                    <p>
+                      {task.files && JSON.parse(task.files).length > 0
+                        ? `${JSON.parse(task.files).length} Dokumen`
+                        : "Tidak ada dokumen"}
+                    </p>
+                  </div>
                   <div className="flex gap-3">
                     <button
                       onClick={(e) => {
@@ -144,63 +228,6 @@ const Task = () => {
                     >
                       <i className="bi bi-pencil-square text-lg text-yellow-500"></i>
                     </button>
-                  </div>
-                </div>
-                <div className="text-slate-500 text-xs font-normal mt-2 flex gap-1">
-                  <div>
-                    {task.assigned_classes.length > 0
-                      ? task.assigned_classes
-                          .map((cls) => cls.class_name)
-                          .join(", ")
-                      : task.assignments.length > 0
-                      ? task.assignments
-                          .map((a) =>
-                            a.student ? a.student.user.name : "Tidak ada target"
-                          )
-                          .join(", ")
-                      : "all students"}
-                  </div>
-                  <div>| {new Date(task.created_at).toLocaleDateString()}</div>
-                </div>
-
-                <p className="text-slate-500 text-sm font-normal mt-2">
-                  {task.lesson.name} | Teacher: {task.teacher.user.name}
-                </p>
-                <div className="flex gap-5 items-center py-3 mb-3">
-                  {task.due_date ? (
-                    <>
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          new Date(task.due_date) - new Date() <=
-                          10 * 60 * 60 * 1000
-                            ? "bg-red-600 animate-ping"
-                            : "bg-green-500 animate-bounce"
-                        }`}
-                      ></div>
-                      <p className="text-slate-500 text-xs font-normal">
-                        Deadline:{" "}
-                        {new Date(task.due_date).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-slate-500 text-xs font-normal">
-                      No Deadline
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-5">
-                  <div className="flex gap-3 text-slate-500 text-sm">
-                    <i className="bi bi-file-earmark-text-fill"></i>
-                    <p>
-                      {task.files && JSON.parse(task.files).length > 0
-                        ? `${JSON.parse(task.files).length} Dokumen`
-                        : "Tidak ada dokumen"}
-                    </p>
                   </div>
                 </div>
               </Link>

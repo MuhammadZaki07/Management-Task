@@ -32,7 +32,7 @@ const ChartTask = () => {
       },
       yaxis: {
         title: {
-          text: "$ (thousands)",
+          text: "Total Tasks",
         },
       },
       fill: {
@@ -41,7 +41,7 @@ const ChartTask = () => {
       tooltip: {
         y: {
           formatter: function (val) {
-            return "$ " + val + " thousands";
+            return val + " tasks";
           },
         },
       },
@@ -52,7 +52,7 @@ const ChartTask = () => {
   useEffect(() => {
     const fetchChartData = async () => {
       setLoading(true);
-  
+
       try {
         const response = await axios.get(
           "http://localhost:8000/api/tasks/teacher/chart",
@@ -62,11 +62,11 @@ const ChartTask = () => {
             },
           }
         );
-  
+
         const data = response.data;
-        const categories = data.map((item) => item.week);
+        const categories = data.map((item) => item.date); // Pakai format tanggal
         const seriesData = data.map((item) => item.total_tasks);
-  
+
         setState((prevState) => ({
           ...prevState,
           series: [{ name: "Total Tasks", data: seriesData }],
@@ -78,10 +78,10 @@ const ChartTask = () => {
         setLoading(false);
       }
     };
-  
+
     fetchChartData();
   }, []);
-  
+
   if (loading) {
     return (
       <div className="bg-gray-100 w-full rounded-xl p-10 space-y-5 flex-[3] animate-pulse">
@@ -92,7 +92,7 @@ const ChartTask = () => {
 
   return (
     <div className="bg-[#f5f2f0] w-full rounded-xl p-10 space-y-5 flex-[3]">
-      <h1 className="font-semibold text-2xl text-[#5b6087]">Task</h1>
+      <h1 className="font-semibold text-2xl text-[#5b6087]">Task Overview</h1>
       <ReactApexChart
         options={state.options}
         series={state.series}

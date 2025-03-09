@@ -9,7 +9,7 @@ const Task = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/task-grading", {
+      .get("http://localhost:8000/api/student-assignments", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -25,19 +25,19 @@ const Task = () => {
   }, [token]);
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const options = {
+    if (!dateString) return "No date";
+    return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
-    };
-    return date.toLocaleDateString("en-US", options);
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="px-16">
@@ -45,74 +45,73 @@ const Task = () => {
         <div className="flex flex-col gap-3">
           <h1 className="font-bold text-4xl text-worn">Task</h1>
           <p className="font-normal text-slate-500">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque,
-            commodi.
+            Daftar tugas yang perlu kamu selesaikan.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button className="border bg-white border-green-500 cursor-pointer text-white font-semibold w-12 h-12 rounded-full">
-            <i className="bi bi-arrow-clockwise text-green-500"></i>
-          </button>
-        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="border bg-white border-green-500 cursor-pointer text-white font-semibold w-12 h-12 rounded-full"
+        >
+          <i className="bi bi-arrow-clockwise text-green-500"></i>
+        </button>
       </div>
 
       <div className="grid grid-cols-4 gap-5 w-full">
-        {tasks.map((taskData) => {
-          const task = taskData.task;
-          const taskClass = taskData.class;
-          const isDeadlinePassed = new Date(task.due_date) < new Date();
-          const timeRemaining = new Date(task.due_date) - new Date();
+        {tasks.map((task) => {
+          const isDeadlinePassed = new Date(task.deadline) < new Date();
+          const timeRemaining = new Date(task.deadline) - new Date();
           const hoursRemaining = timeRemaining / 1000 / 60 / 60;
           const deadlineColor =
-            hoursRemaining <= 5
+            isDeadlinePassed
+              ? "bg-red-500"
+              : hoursRemaining <= 24
               ? "bg-red-600 animate-ping"
-              : "bg-green-600 animate-bounce";
+              : hoursRemaining <= 72
+              ? "bg-yellow-500 animate-pulse"
+              : "bg-green-500 animate-bounce";
 
-          <div
-            className={`w-3 h-3 rounded-full ${
-              isDeadlinePassed ? "bg-none" : `${deadlineColor} animate-ping`
-            }`}
-          ></div>;
+          let files = [];
+          try {
+            files = task.files ? JSON.parse(task.files) : [];
+          } catch (error) {
+            console.error("Error parsing files:", error);
+          }
 
           return (
             <Link
               to={`/student-layout/detail-task/${task.id}`}
               key={task.id}
-              className={`bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer ${
-                isDeadlinePassed ? "opacity-50" : ""
-              }`}
+              className={`${
+                isDeadlinePassed ? "opacity-50" : "opacity-100"
+              } bg-white rounded-xl p-4 hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer`}
             >
-              <h1 className="font-semibold text-2xl text-slate-800">
-                {task.title}
-              </h1>
-              <p className="text-slate-500 text-xs font-normal mt-2">
-                {taskClass.class_name} | {formatDate(task.created_at)}
-              </p>
-              <p className="text-slate-500 text-sm font-normal mt-2">
-                {task.lesson.name} | {task.teacher.user.name}
-              </p>
-              <div
-                className={`py-3 mb-3 ${
-                  isDeadlinePassed ? "bg-none" : "flex gap-5 items-center"
-                }`}
-              >
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    isDeadlinePassed ? "bg-none" : `${deadlineColor}`
-                  }`}
-                ></div>
-                <p className="text-slate-500 text-xs font-normal">
-                  Deadline : {formatDate(task.due_date)}
-                </p>
+              <div className="flex gap-3 items-center">
+                <h1 className="font-semibold text-2xl text-slate-800">
+                  {task.title}
+                </h1>
               </div>
-              <div className="flex gap-5">
+              <div className="text-slate-500 text-xs font-normal mt-2 flex gap-1">
+                <div>{formatDate(task.created_at)}</div>
+              </div>
+              <p className="text-slate-500 text-sm font-normal mt-2">
+                {task.lesson?.name} | {task.teacher?.user?.name}
+              </p>
+              <div className="flex gap-5 items-center py-3 mb-3">
+                {task.deadline ? (
+                  <>
+                    <div className={`w-3 h-3 rounded-full ${deadlineColor}`}></div>
+                    <p className="text-slate-500 text-xs font-normal">
+                      Deadline: {formatDate(task.deadline)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-slate-500 text-xs font-normal">No Deadline</p>
+                )}
+              </div>
+              <div className="flex gap-5 items-center">
                 <div className="flex gap-3 text-slate-500 text-sm">
                   <i className="bi bi-file-earmark-text-fill"></i>
-                  <p>
-                    {task.files && JSON.parse(task.files).length > 0
-                      ? `${JSON.parse(task.files).length} Dokumen`
-                      : "Tidak ada dokumen"}
-                  </p>
+                  <p>{files.length > 0 ? `${files.length} Dokumen` : "Tidak ada dokumen"}</p>
                 </div>
               </div>
             </Link>

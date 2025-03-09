@@ -12,18 +12,17 @@ const Assesment = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const belowResponse = await axios.get(
-          "http://localhost:8000/api/tasks-student/scores?type=below",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const aboveResponse = await axios.get(
-          "http://localhost:8000/api/tasks-student/scores?type=above",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await axios.get("http://localhost:8000/api/assessments/getvalue", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const scores = response.data;
+        const goodValues = scores.filter((item) => item.value >= 75).length;
+        const badValues = scores.filter((item) => item.value < 75).length;
 
         setSeries([
-          { name: "Good Value", data: [aboveResponse.data.data.length], color: "#3b82f6" },
-          { name: "Bad Value", data: [belowResponse.data.data.length], color: "#ef4444" },
+          { name: "Good Value", data: [goodValues], color: "#3b82f6" },
+          { name: "Bad Value", data: [badValues], color: "#ef4444" },
         ]);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -43,7 +42,7 @@ const Assesment = () => {
     plotOptions: {
       bar: {
         horizontal: true,
-        barHeight: "60%",
+        barHeight: "50%", // Pastikan tidak terlalu tinggi
         borderRadius: 5,
         barGap: 50,
       },
@@ -54,8 +53,19 @@ const Assesment = () => {
       labels: { show: false },
       axisBorder: { show: false },
       axisTicks: { show: false },
+      max:10
     },
-    yaxis: { labels: { show: true } },
+    yaxis: {
+      labels: {
+        show: true,
+        style: {
+          fontSize: "14px",
+          fontWeight: 500,
+        },
+        offsetX: -10,
+        offsetY: 2,
+      },
+    },
     grid: { show: false },
     legend: { show: false },
   };

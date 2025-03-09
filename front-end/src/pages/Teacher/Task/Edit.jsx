@@ -1,66 +1,38 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../../../context/AuthContext";
 import Swal from "sweetalert2";
 import PropTypes from "prop-types";
 
 const Edit = ({ task, onSuccess }) => {
-  const [isDeadlineEnabled, setIsDeadlineEnabled] = useState(false);
   const [taskName, setTaskName] = useState(task?.title || "");
-  const [taskDescription, setTaskDescription] = useState(task?.description || "");
-  const [startDeadline, setStartDeadline] = useState("");
-  const [endDeadline, setEndDeadline] = useState("");
+  const [taskDescription, setTaskDescription] = useState(
+    task?.description || ""
+  );
+  const [status, setStatus] = useState(task?.status || "active");
   const [errors, setErrors] = useState({});
   const { token } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (task?.due_date) {
-      const dateParts = task.due_date.split(" ");
-      setStartDeadline(dateParts[0] || "");
-      setEndDeadline(dateParts.length > 1 ? dateParts[1] : dateParts[0] || "");
-      setIsDeadlineEnabled(true);
-    }
-  }, [task]);
-
-  const handleCheckboxChange = (e) => {
-    setIsDeadlineEnabled(e.target.checked);
-
-    if (!e.target.checked) {
-      console.log("Deadline dimatikan, setel ke NULL");
-      setStartDeadline("");
-      setEndDeadline("");
-    }
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     let validationErrors = {};
     if (!taskName.trim()) validationErrors.taskName = "Task name is required";
-    if (!taskDescription.trim()) validationErrors.taskDescription = "Task description is required";
-    if (isDeadlineEnabled && (!startDeadline || !endDeadline)) {
-      validationErrors.deadline = "Start and end deadline are required";
-    }
+    if (!taskDescription.trim())
+      validationErrors.taskDescription = "Task description is required";
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    const formattedDueDate =
-    isDeadlineEnabled && startDeadline && endDeadline
-      ? `${endDeadline} 23:59:59`
-      : task.due_date
-      ? task.due_date 
-      : null;
-
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/tasks/${task.id}`,
+        `http://localhost:8000/api/assignments/${task.id}`,
         {
           title: taskName,
           description: taskDescription,
-          due_date: formattedDueDate,
+          status: status,
         },
         {
           headers: {
@@ -99,7 +71,9 @@ const Edit = ({ task, onSuccess }) => {
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
         />
-        {errors.taskName && <p className="text-red-500 text-sm">{errors.taskName}</p>}
+        {errors.taskName && (
+          <p className="text-red-500 text-sm">{errors.taskName}</p>
+        )}
       </div>
 
       <div>
@@ -110,45 +84,22 @@ const Edit = ({ task, onSuccess }) => {
           value={taskDescription}
           onChange={(e) => setTaskDescription(e.target.value)}
         ></textarea>
-        {errors.taskDescription && <p className="text-red-500 text-sm">{errors.taskDescription}</p>}
+        {errors.taskDescription && (
+          <p className="text-red-500 text-sm">{errors.taskDescription}</p>
+        )}
       </div>
 
-      <div className="col-span-2">
-        <label className="font-medium text-slate-700 flex items-center gap-2">
-          <input
-            type="checkbox"
-            className="w-4 h-4"
-            checked={isDeadlineEnabled}
-            onChange={handleCheckboxChange}
-          />{" "}
-          Enable Deadline
-        </label>
+      <div>
+        <label className="font-medium text-slate-700">Task Status</label>
+        <select
+          className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          <option value="active">Active</option>
+          <option value="non-active">Non-Active</option>
+        </select>
       </div>
-
-      {isDeadlineEnabled && (
-        <div className="grid grid-cols-2 gap-5">
-          <div>
-            <label className="font-medium text-slate-700">Start Deadline</label>
-            <input
-              type="date"
-              className="w-full py-2 px-4 rounded-lg border border-orange-500"
-              value={startDeadline}
-              onChange={(e) => setStartDeadline(e.target.value)}
-              readOnly
-            />
-          </div>
-          <div>
-            <label className="font-medium text-slate-700">End Deadline</label>
-            <input
-              type="date"
-              className="w-full py-2 px-4 rounded-lg border border-orange-500"
-              value={endDeadline}
-              onChange={(e) => setEndDeadline(e.target.value)}
-              min={startDeadline}
-            />
-          </div>
-        </div>
-      )}
 
       <button
         type="submit"

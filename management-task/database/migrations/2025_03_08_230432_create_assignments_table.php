@@ -9,16 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('tasks', function (Blueprint $table) {
+    public function up() {
+        Schema::create('assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
             $table->foreignId('lesson_id')->constrained('lessons')->onDelete('cascade');
             $table->string('title');
-            $table->text('description')->nullable();
+            $table->text('description');
             $table->json('files')->nullable();
-            $table->dateTime('due_date')->nullable();
+            $table->dateTime('deadline')->nullable();
+            $table->enum('status',['active','non-active'])->default('active');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('assignments');
     }
 };

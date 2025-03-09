@@ -60,7 +60,7 @@ class StudentController extends Controller
         }
 
         return response()->json([
-            'student_id' => $student->id, 
+            'student_id' => $student->id,
         ]);
     }
 
@@ -143,21 +143,17 @@ class StudentController extends Controller
             'department_id' => $validated['department_id']
         ]);
 
-        // Handle missing or null class_id, providing a warning log
         if ($validated['class_id'] == null) {
             Log::warning("Class ID is missing, proceeding without class assignment.");
         }
 
-        // Ensure department_id is not null
         if ($validated['department_id'] == null) {
             Log::error('Department ID is missing');
             return response()->json(['error' => 'Department ID is required'], 422);
         }
 
-        // Start transaction to ensure atomicity
         return DB::transaction(function () use ($validated) {
             try {
-                // Create user record
                 $user = User::create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
@@ -182,7 +178,6 @@ class StudentController extends Controller
                     'data' => $student
                 ], 201);
             } catch (\Exception $e) {
-                // Log the error if something goes wrong
                 Log::error('Error creating student: ' . $e->getMessage(), [
                     'exception' => $e
                 ]);

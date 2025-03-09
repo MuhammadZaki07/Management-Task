@@ -63,9 +63,6 @@ const StudentLayout = () => {
               link="student-layout/task"
               logo="bi bi-memory"
               label="Task"
-              showBadge={true}
-              left={`left-9`}
-              top={`top-3`}
             />
           <LinkSidebar
             link="student-layout/assessment"

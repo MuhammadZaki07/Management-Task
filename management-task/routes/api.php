@@ -3,6 +3,7 @@
 use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassAssignmentController;
 use App\Http\Controllers\ClassroomController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentImportController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskGradeController;
 use App\Http\Controllers\TaskSubmissionController;
@@ -32,9 +34,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('classes', ClassroomController::class);
     Route::resource('students', StudentController::class);
     Route::resource('lessons', LessonController::class);
-    Route::get('/download', [TaskController::class, 'download']);
-    Route::resource('task-grading', TaskGradeController::class);
-    Route::resource('tasks', TaskController::class);
+    Route::post('/assignments/grade/{id}', [AssignmentController::class, 'grade']);
+    Route::get('/download', [AssignmentController::class, 'download']);
+    Route::get('/assignments/{id}', [AssignmentController::class, 'show']);
+    Route::post('/assignments/{assignment}/comment', [TaskCommentController::class, 'store']);
+    Route::get('/assignments/{assignment}/comments', [TaskCommentController::class, 'index']);
+    Route::get('/assignments/{id}/submissions', [AssignmentController::class, 'getSubmissions']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -58,19 +63,25 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'role:teacher'])->group(function () {
-    Route::post('/submissions/{submissionId}/review-revision', [TaskSubmissionController::class, 'reviewRevision']);
-    Route::get('tasks/teacher/chart', [TaskController::class, 'getTaskChartData']);
+    Route::get('tasks/teacher/chart', [AssignmentController::class, 'getTaskChartData']);
     Route::get('/teacher', [TeacherController::class, 'profile']);
-    Route::get('/task-submissions/filter', [TaskSubmissionController::class, 'filter']);
+    Route::get('/assignments', [AssignmentController::class, 'index']);
+    Route::post('/assignments', [AssignmentController::class, 'store']);
+    Route::put('/assignments/{id}', [AssignmentController::class, 'update']);
+    Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy']);
+    Route::post('/submissions/{submissionId}/grade', [AssignmentController::class, 'gradeSubmission']);
+    Route::post('/submissions/{submissionId}/review-revision', [AssignmentController::class, 'reviewRevision']);
+    Route::post('/submissions/{submissionId}/handle-revision', [AssignmentController::class, 'handleRevision']);
 });
 
 Route::middleware(['auth:sanctum', 'role:student'])->group(function () {
-    Route::resource('task-submissions', TaskSubmissionController::class)->only(['store', 'update', 'show', 'destroy']);
-    Route::post('task-submissions', [TaskSubmissionController::class, 'store']);
-    Route::post('/submissions/{submissionId}/request-revision', [TaskSubmissionController::class, 'requestRevision']);
-    Route::get('/completed-tasks', [TaskSubmissionController::class, 'getComplateTask']);
     Route::get('/profile', [StudentController::class, 'profile']);
     Route::get('/student-id', [StudentController::class, 'getStudentId']);
     Route::get('/tasks-student/scores', [StudentController::class, 'getTasksByScore']);
+    Route::get('/student-assignments', [AssignmentController::class, 'studentAssignments']);
+    Route::post('/assignments/{assignmentId}/submit', [AssignmentController::class, 'submit']);
+    Route::delete('/assignments/{assignmentId}/delete', [AssignmentController::class, 'deleteSubmission']);
+    Route::post('/submissions/{submissionId}/request-revision', [AssignmentController::class, 'requestRevision']);
+    Route::get('/assessments/getvalue', [AssignmentController::class, 'getValueTask']);
+    Route::get('/completed-tasks', [AssignmentController::class, 'getCompletedTasks']);
 });
-
