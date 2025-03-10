@@ -85,28 +85,38 @@ class AssignmentController extends Controller
             'description' => $request->description,
             'deadline' => $request->deadline,
             'files' => json_encode($uploadedFiles),
+            'status' => 'active',
         ]);
 
-        if ($request->has('assign_to_classes')) {
+        $assignedStudents = [];
+
+        if ($request->filled('assign_to_classes')) {
             foreach ($request->assign_to_classes as $class_id) {
                 AssignmentRecipient::create([
                     'assignment_id' => $assignment->id,
                     'class_id' => $class_id
                 ]);
+
+                $studentsInClass = Student::where('class_id', $class_id)->pluck('id')->toArray();
+                $assignedStudents = array_merge($assignedStudents, $studentsInClass);
             }
         }
 
-        if ($request->has('assign_to_students')) {
+        if ($request->filled('assign_to_students')) {
             foreach ($request->assign_to_students as $student_id) {
                 AssignmentRecipient::create([
                     'assignment_id' => $assignment->id,
                     'student_id' => $student_id
                 ]);
+
+                $assignedStudents[] = $student_id;
             }
         }
 
+        $assignedStudents = array_unique($assignedStudents);
+
         NotificationHelper::sendMultiple(
-            $student_id->toArray(),
+            $assignedStudents,
             'new_task',
             "Anda memiliki tugas baru: {$request->title}."
         );

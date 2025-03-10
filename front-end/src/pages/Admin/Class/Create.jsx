@@ -123,7 +123,7 @@ const Create = ({ onSuccess }) => {
           value={formData.grade_level}
           onChange={handleChange}
           className="w-full bg-white py-2 px-4 rounded-lg border border-orange-500"
-          placeholder="Enter max students"
+          placeholder="Grade"
         />
         {errors.grade_level && <span className="text-red-500 text-sm">{errors.grade_level[0]}</span>}
       </div>

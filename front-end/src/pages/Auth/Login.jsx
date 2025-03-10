@@ -13,44 +13,36 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
-
   const formSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    setErrors({}); // Reset errors before sending request
 
     try {
       const response = await axios.post("/api/login", formData, {
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
+
       const data = response.data.data;
+      setToken(data.token);
+      localStorage.setItem("token", data.token);
 
-      if (data.errors) {
-        setErrors(data.errors);
-      } else {
-        setToken(data.token);
-        localStorage.setItem("token", data.token);
-
-        const redirectPath =
-          {
-            admin: "/admin-layout/dashboard",
-            teacher: "/teacher-layout/dashboard",
-            student: "/student-layout/dashboard",
-          }[data.user.role] || "/";
-        navigate(redirectPath);
-        console.log("Success Login");
-      }
+      const redirectPath =
+        {
+          admin: "/admin-layout/dashboard",
+          teacher: "/teacher-layout/dashboard",
+          student: "/student-layout/dashboard",
+        }[data.user.role] || "/";
+      navigate(redirectPath);
     } catch (error) {
       if (error.response) {
         console.error("Login Error:", error.response.data);
-        setErrors(error.response.data.errors || { general: "Terjadi kesalahan. Coba lagi nanti." });
+        setErrors(error.response.data.errors || { general: "Incorrect email or password." });
       } else {
         console.error("Network Error:", error.message);
-        setErrors({ general: "Koneksi gagal. Periksa jaringan Anda." });
+        setErrors({ general: "Network error. Please check your connection." });
       }
     }
-    
   };
 
   return (
@@ -85,10 +77,7 @@ const Login = () => {
               )}
             </div>
             <div className="row relative">
-              <label
-                htmlFor="password"
-                className="font-gummy text-light text-lg"
-              >
+              <label htmlFor="password" className="font-gummy text-light text-lg">
                 Password
               </label>
               <div className="relative w-full">
@@ -103,9 +92,7 @@ const Login = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-slate-500"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  <i
-                    className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
-                  ></i>
+                  <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
                 </span>
               </div>
               {errors.password && (
@@ -119,7 +106,7 @@ const Login = () => {
             )}
             <button
               type="submit"
-              className="w-1/2 mx-auto bg-amber-300 py-3 rounded-lg text-white text-xl hover:bg-amber-500 cursor-pointer "
+              className="w-1/2 mx-auto bg-amber-300 py-3 rounded-lg text-white text-xl hover:bg-amber-500 cursor-pointer"
             >
               Login
             </button>

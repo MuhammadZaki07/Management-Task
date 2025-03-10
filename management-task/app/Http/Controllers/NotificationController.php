@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewNotification;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,19 @@ class NotificationController extends Controller
         $notification->update(['is_read' => true]);
 
         return response()->json(['status' => 'success', 'message' => 'Notification marked as read']);
+    }
+
+    public function sendNotification(Request $request)
+    {
+        $notification = Notification::create([
+            'user_id' => $request->user_id,
+            'message' => $request->message,
+            'is_read' => false,
+        ]);
+
+        broadcast(new NewNotification($notification))->toOthers();
+
+        return response()->json(['success' => true, 'message' => 'Notification sent!', 'notification' => $notification]);
     }
 
     public function destroy(Request $request)

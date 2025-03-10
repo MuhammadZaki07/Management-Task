@@ -154,12 +154,12 @@ const Create = ({ onClose, refreshData, userRole }) => {
           >
             <option value="">Select Student/Teacher</option>
             {students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.user.email}
+              <option key={student.id} value={student.user_id}>
+                 {student.user.name} | {student.class.class_name} | {student.user.email}
               </option>
             ))}
             {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
+              <option key={teacher.id} value={teacher.user_id}>
                 {teacher.user.email}
               </option>
             ))}

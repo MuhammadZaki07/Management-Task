@@ -108,7 +108,15 @@ const Task = () => {
       </div>
 
       {loading ? (
-        <p>Loading tasks...</p>
+        <div className="w-full py-20 px-16">
+        <div className="bg-slate-200 w-1/5 rounded-lg animate-pulse h-4"></div>
+        <div className="bg-slate-200 w-1/3 mt-2 rounded-lg animate-pulse h-4"></div>
+        <div className="grid grid-cols-4 gap-5 py-20">
+          {Array.from({length: 8}).map((_,i) => (
+            <div key={i + 1} className="bg-slate-200 animate-pulse rounded-lg w-full h-52"></div>
+          ))}
+        </div>
+      </div>
       ) : (
         <div className="grid grid-cols-4 gap-5 w-full py-10">
           {tasks.length === 0 ? (

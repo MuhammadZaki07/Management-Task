@@ -171,8 +171,8 @@ const Create = ({ onSuccess, modalState }) => {
                 className="w-full bg-white py-2 px-4 rounded-lg text-sm font-light border border-orange-500/[0.5] focus:outline-none"
               >
                 <option value="">Pilih Gender</option>
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
+                <option value="L">Male</option>
+                <option value="P">Female</option>
               </select>
               {errors.gender && (
                 <p className="text-red-500 text-sm">{errors.gender[0]}</p>

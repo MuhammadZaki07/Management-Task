@@ -126,10 +126,6 @@ const TeacherPage = () => {
     setModalState({ isOpen: false });
   };
 
-  const handleImport = () => {
-    setModalState({ isOpen: true, mode: "create-import", teacher: null });
-  };
-
   const columns = [
     {
       accessorKey: "user.name",
@@ -182,7 +178,6 @@ const TeacherPage = () => {
         onCreate={handleCreate}
         onDelete={handleDelete}
         onEdit={handleEdit}
-        onImport={handleImport}
       />
 
       {modalState.isOpen && (

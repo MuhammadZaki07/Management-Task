@@ -143,7 +143,7 @@ const Student = () => {
     {
       accessorKey: "user.gender",
       header: "Gender",
-      cell: (info) => (info.getValue() === "L" ? "Boy" : "Girl"),
+      cell: (info) => (info.getValue() === "L" ? "Male" : "Female"),
     },
     { accessorKey: "user.age", header: "Age", cell: (info) => info.getValue() },
     {

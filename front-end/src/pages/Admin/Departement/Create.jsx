@@ -17,7 +17,7 @@ const Create = ({ onClose }) => {
     if (!departmentName.trim()) {
       Swal.fire({
         title: "Error",
-        text: "Nama Departemen tidak boleh kosong!",
+        text: "Department Name cannot be blank!",
         icon: "error",
       });
       return;
@@ -35,16 +35,16 @@ const Create = ({ onClose }) => {
       );
 
       Swal.fire({
-        title: "Berhasil!",
-        text: "Departemen berhasil ditambahkan.",
+        title: "Success!!",
+        text: "Department added successfully.",
         icon: "success",
       });
 
       onClose();
     } catch (error) {
-      console.error("Gagal menambahkan departemen:", error);
+      console.error("Failed to add department:", error);
 
-      let errorMessage = "Terjadi kesalahan saat menambahkan departemen.";
+      let errorMessage = "Tan error occurred while adding a department.";
 
       if (error.response && error.response.data.message) {
         errorMessage = error.response.data.message;
@@ -67,7 +67,7 @@ const Create = ({ onClose }) => {
         type="text"
         name="department_name"
         className="w-full bg-white py-2 px-4 rounded-lg text-sm font-normal border border-orange-500/[0.5] focus:outline-none"
-        placeholder="Nama Departemen"
+        placeholder="Name Departement"
         value={departmentName}
         onChange={handleChange}
       />
@@ -76,7 +76,7 @@ const Create = ({ onClose }) => {
         type="submit"
         className="mt-4 bg-orange-400 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition cursor-pointer"
       >
-        Simpan
+        Save
       </button>
     </form>
   );

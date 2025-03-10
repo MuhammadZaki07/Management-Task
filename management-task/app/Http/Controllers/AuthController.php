@@ -28,18 +28,41 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->response(400, 'Invalid field(s) in request', [], $validator->errors());
+            return response()->json([
+                'status' => 400,
+                'message' => 'Invalid field(s) in request',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         $user = User::where('email', $request->email)->first();
-        if ($user && Hash::check($request->password, $user->password)) {
-            $token = $user->createToken('auth_token')->plainTextToken;
-            return $this->response(200, 'success', 'Successfully logged in', [
+
+        if (!$user) {
+            return response()->json([
+                'status' => 401,
+                'message' => 'Authentication failed',
+                'errors' => ['email' => 'This email is not registered.']
+            ], 401);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => 401,
+                'message' => 'Authentication failed',
+                'errors' => ['password' => 'The password you entered is incorrect.']
+            ], 401);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Successfully logged in',
+            'data' => [
                 'user' => $user,
                 'token' => $token
-            ]);
-        }
-        return $this->response(401, 'authentication_failed', 'The username or password you entered is incorrect');
+            ]
+        ], 200);
     }
 
     public function registration(Request $request)

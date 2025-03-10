@@ -157,14 +157,14 @@ const DetailTask = () => {
         }
       );
 
-      Swal.fire("Berhasil!", response.data.message, "success");
+      Swal.fire("Success!", response.data.message, "success");
     } catch (error) {
       console.error("Error:", error);
       Swal.fire("Gagal!", "Terjadi kesalahan saat mengajukan revisi.", "error");
     }
   };
 
-  const { text, color } = getStatus(task.due_date);
+  const { color } = getStatus(task.due_date);
 
   return (
     <div className="px-16 py-10 w-full">

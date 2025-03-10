@@ -40,6 +40,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/assignments/{assignment}/comment', [TaskCommentController::class, 'store']);
     Route::get('/assignments/{assignment}/comments', [TaskCommentController::class, 'index']);
     Route::get('/assignments/{id}/submissions', [AssignmentController::class, 'getSubmissions']);
+    Route::post('/send-notification', [NotificationController::class, 'sendNotification']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
