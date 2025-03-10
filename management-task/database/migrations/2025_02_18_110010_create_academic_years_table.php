@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('academic_years', function (Blueprint $table) {
             $table->id();
             $table->string('year')->unique();
-            $table->enum('status', ['active', 'inactive'])->default('inactive'); // Biar bisa set tahun ajaran aktif
+            $table->enum('status', ['active', 'inactive'])->default('inactive');
             $table->timestamps();
         });
     }

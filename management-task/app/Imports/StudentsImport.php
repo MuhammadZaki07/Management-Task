@@ -35,7 +35,7 @@ class StudentsImport implements ToModel, WithHeadingRow
             'role' => 'student',
             'age' => $row['age'] ?? null,
             'no_tlp' => $row['no_tlp'] ?? null,
-            'gender' => $row['gender'] ?? null,
+            'gender' => $row['gender'] === "male" ? "L" : "P",
         ]);
 
 
